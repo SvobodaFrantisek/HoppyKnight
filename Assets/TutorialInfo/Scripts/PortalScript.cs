@@ -43,7 +43,7 @@ public class PortalScript : MonoBehaviour
         FPSController controller = player.GetComponent<FPSController>();
         if (controller != null)
             // Input zamkneme, ale movement script nechame bezet kvuli gravitaci.
-            controller.SetInputLocked(true);
+            controller.enabled = false;
 
         CombatScript combat = player.GetComponent<CombatScript>();
         if (combat != null)
