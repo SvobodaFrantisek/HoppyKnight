@@ -37,6 +37,10 @@ public class FPSController : MonoBehaviour
     private InputAction dodgeAction;
     private CharacterController cc;
     private Vector3 velocity;
+    private MovingPlatform currentPlatform;
+    private float animationMoveSpeed;
+    private float groundedAnimationGraceTime = 0.15f;
+    private float groundedAnimationTimer;
 
     private float jumpTimeoutDelta;
     private float dodgeTimer;
@@ -270,15 +274,47 @@ public class FPSController : MonoBehaviour
 
             float currentSpeed = isDodging ? DodgeSpeed : moveSpeed;
 
+            if (moveDir != Vector3.zero)
+            {
+                animationMoveSpeed = currentSpeed;
+            }
+            else
+            {
+                animationMoveSpeed = 0f;
+            }
+
             Vector3 finalMove = moveDir * currentSpeed;
             finalMove.y = velocity.y;
+            Vector3 platformMove = Vector3.zero;
 
-            cc.Move(finalMove * Time.deltaTime);
+            if (currentPlatform != null)
+            {
+                platformMove = currentPlatform.frameDelta;
+            }
+
+            cc.Move(platformMove + finalMove * Time.deltaTime);
 
             if ((cc.collisionFlags & CollisionFlags.Above) != 0)
             {
                 if (velocity.y > 0)
                     velocity.y = -2f;
+            }
+        }
+
+        if (cc.isGrounded)
+        {
+            groundedAnimationTimer = groundedAnimationGraceTime;
+        }
+        else
+        {
+            if (groundedAnimationTimer > 0f)
+            {
+                groundedAnimationTimer -= Time.deltaTime;
+            }
+
+            if (groundedAnimationTimer < 0f)
+            {
+                groundedAnimationTimer = 0f;
             }
         }
     }
@@ -297,10 +333,36 @@ public class FPSController : MonoBehaviour
             return;
         }
 
-        float horizontalSpeed = new Vector3(cc.velocity.x, 0, cc.velocity.z).magnitude;
+        bool isGroundedForAnimation = false;
 
-        animator.SetFloat("Speed", horizontalSpeed);
-        animator.SetBool("IsGrounded", cc.isGrounded);
+        if (cc.isGrounded)
+        {
+            isGroundedForAnimation = true;
+        }
+        else
+        {
+            if (groundedAnimationTimer > 0f)
+            {
+                isGroundedForAnimation = true;
+            }
+        }
+
+        animator.SetFloat("Speed", animationMoveSpeed);
+        animator.SetBool("IsGrounded", isGroundedForAnimation);
         animator.SetBool("IsClimbing", isClimbing);
     }
+
+    public void SetCurrentPlatform(MovingPlatform platform)
+    {
+        currentPlatform = platform;
+    }
+
+    public void ClearCurrentPlatform(MovingPlatform platform)
+    {
+        if (currentPlatform == platform)
+        {
+            currentPlatform = null;
+        }
+    }
+
 }
