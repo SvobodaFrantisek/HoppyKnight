@@ -30,6 +30,8 @@ public class FPSController : MonoBehaviour
     public Animator animator;
     // Portal / finish sekvence muze input zamknout, ale controller porad bezi kvuli gravitaci.
     public bool inputLocked = false;
+    // Pri piti potionu chceme zastavit jen pohyb, ale nechat kameru aktivni.
+    public bool movementLocked = false;
 
     private PlayerInput playerInput;
     private InputAction moveAction;
@@ -48,7 +50,18 @@ public class FPSController : MonoBehaviour
     private bool isDodging;
     private Vector3 dodgeDirection;
 
-    private float DodgeSpeed => dodgeDuration > 0f ? dodgeDistance / dodgeDuration : 0f;
+    private float DodgeSpeed
+    {
+        get
+        {
+            if (dodgeDuration > 0f)
+            {
+                return dodgeDistance / dodgeDuration;
+            }
+
+            return 0f;
+        }
+    }
 
     void Awake()
     {
@@ -65,9 +78,20 @@ public class FPSController : MonoBehaviour
         jumpAction = playerInput.actions.FindAction("Jump");
         dodgeAction = playerInput.actions.FindAction("Sprint");
 
-        moveAction?.Enable();
-        jumpAction?.Enable();
-        dodgeAction?.Enable();
+        if (moveAction != null)
+        {
+            moveAction.Enable();
+        }
+
+        if (jumpAction != null)
+        {
+            jumpAction.Enable();
+        }
+
+        if (dodgeAction != null)
+        {
+            dodgeAction.Enable();
+        }
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -75,9 +99,20 @@ public class FPSController : MonoBehaviour
 
     void OnDisable()
     {
-        moveAction?.Disable();
-        jumpAction?.Disable();
-        dodgeAction?.Disable();
+        if (moveAction != null)
+        {
+            moveAction.Disable();
+        }
+
+        if (jumpAction != null)
+        {
+            jumpAction.Disable();
+        }
+
+        if (dodgeAction != null)
+        {
+            dodgeAction.Disable();
+        }
 
         if (animator != null)
         {
@@ -110,13 +145,35 @@ public class FPSController : MonoBehaviour
         }
     }
 
+    public void SetMovementLocked(bool locked)
+    {
+        movementLocked = locked;
+
+        if (locked)
+        {
+            isDodging = false;
+            dodgeTimer = 0f;
+            animationMoveSpeed = 0f;
+
+            if (animator != null)
+            {
+                animator.ResetTrigger("Dodge");
+            }
+        }
+    }
+
     void HandleMovement()
     {
-        Vector2 moveInput = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
+        Vector2 moveInput = Vector2.zero;
+
+        if (moveAction != null)
+        {
+            moveInput = moveAction.ReadValue<Vector2>();
+        }
 
         // Pri shopu nebo finish sekvenci nechceme brat movement input,
         // ale ostatni cast controlleru musi bezet dal.
-        if (inputLocked || Cursor.lockState != CursorLockMode.Locked)
+        if (inputLocked || movementLocked || Cursor.lockState != CursorLockMode.Locked)
             moveInput = Vector2.zero;
 
         if (dodgeCooldownTimer > 0f)
@@ -187,7 +244,7 @@ public class FPSController : MonoBehaviour
                 if (velocity.y < 0.0f)
                     velocity.y = -groundedStickForce;
 
-                if (!inputLocked && jumpAction != null && jumpAction.WasPressedThisFrame())
+                if (!inputLocked && !movementLocked && jumpAction != null && jumpAction.WasPressedThisFrame())
                 {
                     // Prvni skok ze zeme.
                     velocity.y = jumpSpeed;
@@ -206,7 +263,7 @@ public class FPSController : MonoBehaviour
                 if (jumpTimeoutDelta >= 0.0f)
                     jumpTimeoutDelta -= Time.deltaTime;
 
-                if (!inputLocked && jumpAction != null && jumpAction.WasPressedThisFrame() && hasDoubleJump && jumpCount < 2)
+                if (!inputLocked && !movementLocked && jumpAction != null && jumpAction.WasPressedThisFrame() && hasDoubleJump && jumpCount < 2)
                 {
                     // Druhy skok ve vzduchu.
                     velocity.y = jumpSpeed;
@@ -230,6 +287,7 @@ public class FPSController : MonoBehaviour
 
             if (!isDodging &&
                 !inputLocked &&
+                !movementLocked &&
                 dodgeAction != null &&
                 dodgeAction.WasPressedThisFrame() &&
                 cc.isGrounded &&
@@ -240,7 +298,15 @@ public class FPSController : MonoBehaviour
                 dodgeTimer = dodgeDuration;
                 dodgeCooldownTimer = dodgeCooldown;
 
-                dodgeDirection = moveDir != Vector3.zero ? moveDir : transform.forward;
+                if (moveDir != Vector3.zero)
+                {
+                    dodgeDirection = moveDir;
+                }
+                else
+                {
+                    dodgeDirection = transform.forward;
+                }
+
                 dodgeDirection.y = 0f;
                 dodgeDirection.Normalize();
 

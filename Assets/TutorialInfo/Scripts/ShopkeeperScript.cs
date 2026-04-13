@@ -4,6 +4,7 @@ public class ShopkeeperScript : MonoBehaviour
 {
     public GameObject shopUI;
     public GameManager gameManager;
+    public PotionInventory potionInventory;
     public bool playerInRange = false;
 
     public int healthCost = 0;
@@ -14,8 +15,20 @@ public class ShopkeeperScript : MonoBehaviour
 
     private void Start()
     {
+        if (gameManager == null)
+        {
+            gameManager = FindAnyObjectByType<GameManager>();
+        }
+
+        if (potionInventory == null)
+        {
+            potionInventory = FindAnyObjectByType<PotionInventory>();
+        }
+
         if (shopUI != null)
+        {
             shopUI.SetActive(false);
+        }
         else
         {
             Debug.LogError("shop panel neni prirazen");
@@ -75,25 +88,75 @@ public class ShopkeeperScript : MonoBehaviour
 
     public void BuyHealth()
     {
-       gameManager.buyItem(healthCost);
+        TryBuyPotion(PotionType.Heal, healthCost);
     }
+
     public void BuySpeed()
     {
-        gameManager.buyItem(speedCost);
+        TryBuyPotion(PotionType.Speed, speedCost);
     }
+
     public void BuyJumpBoost()
     {
-        gameManager.buyItem(jumpBoostCost);
+        TryBuyPotion(PotionType.JumpBoost, jumpBoostCost);
     }
 
     public void BuyDoubleJump()
     {
-       gameManager.buyItem(doubleJumpCost);
+        TryBuyPotion(PotionType.DoubleJump, doubleJumpCost);
     }
 
     public void BuyStrength()
     {
-       gameManager.buyItem(strengthCost);
+        TryBuyPotion(PotionType.Strength, strengthCost);
+    }
+
+    private bool TryBuyPotion(PotionType potionType, int cost)
+    {
+        if (potionInventory == null)
+        {
+            potionInventory = FindAnyObjectByType<PotionInventory>();
+        }
+
+        if (gameManager == null)
+        {
+            gameManager = FindAnyObjectByType<GameManager>();
+        }
+
+        if (potionInventory == null)
+        {
+            Debug.LogWarning("PotionInventory nebyl nalezen.");
+            return false;
+        }
+
+        if (gameManager == null)
+        {
+            Debug.LogWarning("GameManager nebyl nalezen.");
+            return false;
+        }
+
+        if (!potionInventory.HasFreeSlot())
+        {
+            Debug.Log("Inventar potionu je plny.");
+            return false;
+        }
+
+        bool spendSuccess = gameManager.TrySpendCoins(cost);
+
+        if (!spendSuccess)
+        {
+            return false;
+        }
+
+        bool addSuccess = potionInventory.TryAddPotion(potionType);
+
+        if (!addSuccess)
+        {
+            Debug.LogWarning("Potion se nepodarilo vlozit do inventare.");
+            return false;
+        }
+
+        return true;
     }
 }
 

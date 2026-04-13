@@ -13,6 +13,7 @@ public class CombatScript : MonoBehaviour
     private PlayerInput _playerInput;
     private InputAction _attackAction;
     private float _lastAttackTime;
+    private bool combatBlocked;
 
     void Awake()
     {
@@ -36,6 +37,7 @@ public class CombatScript : MonoBehaviour
     void Update()
     {
         if (Cursor.lockState != CursorLockMode.Locked) return;
+        if (combatBlocked) return;
         if (_attackAction != null && _attackAction.triggered && CanAttack())
         {
             Attack();
@@ -67,5 +69,15 @@ public class CombatScript : MonoBehaviour
     public void TrailOff()
     {
         if (traileffect != null) traileffect.SetActive(false);
+    }
+
+    public void SetCombatBlocked(bool blocked)
+    {
+        combatBlocked = blocked;
+
+        if (combatBlocked)
+        {
+            TrailOff();
+        }
     }
 }
