@@ -2,9 +2,7 @@ using UnityEngine;
 
 public class Respawn : MonoBehaviour
 {
-    // Aktualni misto, kam se hrac vrati po padu pod mapu.
     public Transform respawnPoint;
-    // Jednoducha kontrola padu pod level. Hodnota se bude ladit podle vysky ostrovu.
     public float fallLimitY = -20f;
 
     private CharacterController cc;
@@ -16,7 +14,6 @@ public class Respawn : MonoBehaviour
 
     void Update()
     {
-        // Pro prvni verzi je nejjednodussi sledovat jen Y pozici hrace.
         if (transform.position.y < fallLimitY)
         {
             PlayerRespawn();
@@ -25,7 +22,6 @@ public class Respawn : MonoBehaviour
 
     public void SetRespawnPoint(Transform newRespawnPoint)
     {
-        // Checkpoint jen prepise, kam se ma dalsi respawn vratit.
         respawnPoint = newRespawnPoint;
     }
 
@@ -37,15 +33,19 @@ public class Respawn : MonoBehaviour
             return;
         }
 
-        if (cc != null)
-            // CharacterController je lepsi pri teleportu na chvili vypnout,
-            // aby se nezasekl do kolize nebo neudelal divny skok.
-            cc.enabled = false;
+        SetCharacterControllerEnabled(false);
 
         transform.position = respawnPoint.position;
         transform.rotation = respawnPoint.rotation;
 
+        SetCharacterControllerEnabled(true);
+    }
+
+    void SetCharacterControllerEnabled(bool enabledState)
+    {
         if (cc != null)
-            cc.enabled = true;
+        {
+            cc.enabled = enabledState;
+        }
     }
 }

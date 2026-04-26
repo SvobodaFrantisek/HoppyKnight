@@ -1,59 +1,95 @@
-using JetBrains.Annotations;
 using UnityEngine;
 
 public class Gem : MonoBehaviour
 {
-
+    [Header("Idle")]
     public float rotationSpeed = 100f;
+
+    [Header("Collect")]
     public float flySpeed = 15f;
 
     public GameManager gameManager;
     public bool isFlyingToPlayer = false;
-    Vector3 startPosition;
+
     private Transform playerPosition;
 
     void Start()
     {
-        gameManager = FindAnyObjectByType<GameManager>();
-        if (gameManager == null)
-        {
-            Debug.LogError("GameManager nnenalezen");
-        }
-        startPosition = transform.position;
+        CacheGameManager();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (!isFlyingToPlayer)
+        if (isFlyingToPlayer)
         {
-            transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
-        }
-        else
-        {
-            transform.Rotate(Vector3.up, (rotationSpeed * 5) * Time.deltaTime);
-            Vector3 targetPosition = playerPosition.position + Vector3.up * 1.1f;
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, flySpeed * Time.deltaTime);
-            if (Vector3.Distance(transform.position, targetPosition) < 0.5f)
-            {
-                CollectGem();
-            }
-
+            UpdateFlyToPlayer();
+            return;
         }
 
+        UpdateIdleMotion();
     }
-    public void CollectGem()
+
+    void OnTriggerEnter(Collider other)
     {
-        gameManager.addGem(1);
+        if (!other.CompareTag("Player"))
+        {
+            return;
+        }
+
+        if (isFlyingToPlayer)
+        {
+            return;
+        }
+
+        StartFlyToPlayer(other.transform);
+    }
+
+    void UpdateIdleMotion()
+    {
+        transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+    }
+
+    void UpdateFlyToPlayer()
+    {
+        if (playerPosition == null)
+        {
+            return;
+        }
+
+        transform.Rotate(Vector3.up, rotationSpeed * 5f * Time.deltaTime);
+
+        Vector3 targetPosition = playerPosition.position + Vector3.up * 1.1f;
+        transform.position = Vector3.MoveTowards(transform.position, targetPosition, flySpeed * Time.deltaTime);
+
+        if (Vector3.Distance(transform.position, targetPosition) < 0.5f)
+        {
+            CollectGem();
+        }
+    }
+
+    void StartFlyToPlayer(Transform target)
+    {
+        playerPosition = target;
+        isFlyingToPlayer = true;
+    }
+
+    void CollectGem()
+    {
+        if (gameManager != null)
+        {
+            gameManager.AddGem(1);
+        }
+
         Destroy(gameObject);
     }
-    public void OnTriggerEnter(Collider other)
+
+    void CacheGameManager()
     {
-        if (other.CompareTag("Player"))
+        gameManager = FindAnyObjectByType<GameManager>();
+
+        if (gameManager == null)
         {
-            playerPosition = other.transform;
-            isFlyingToPlayer = true;
+            Debug.LogError("GameManager nenalezen");
         }
     }
 }
-

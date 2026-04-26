@@ -18,28 +18,15 @@ public class MovingPlatform : MonoBehaviour
 
     void Start()
     {
-        if (pointA == null || pointB == null)
+        if (!HasRequiredPoints())
         {
             Debug.LogError("MovingPlatform: chybi pointA nebo pointB.");
             enabled = false;
             return;
         }
 
-        pointAPosition = pointA.position;
-        pointBPosition = pointB.position;
-
-        if (startFromA)
-        {
-            transform.position = pointAPosition;
-            movingToPointB = true;
-            currentTargetPosition = pointBPosition;
-        }
-        else
-        {
-            transform.position = pointBPosition;
-            movingToPointB = false;
-            currentTargetPosition = pointAPosition;
-        }
+        CachePointPositions();
+        SetStartState();
 
         previousPosition = transform.position;
         frameDelta = Vector3.zero;
@@ -51,33 +38,15 @@ public class MovingPlatform : MonoBehaviour
 
         if (waitTimer > 0f)
         {
-            waitTimer -= Time.deltaTime;
-            frameDelta = Vector3.zero;
+            UpdateWaitingState();
             return;
         }
 
-        transform.position = Vector3.MoveTowards(
-            transform.position,
-            currentTargetPosition,
-            speed * Time.deltaTime
-        );
+        MoveTowardsCurrentTarget();
 
         if (transform.position == currentTargetPosition)
         {
-            if (movingToPointB)
-            {
-                transform.position = pointBPosition;
-                currentTargetPosition = pointAPosition;
-                movingToPointB = false;
-            }
-            else
-            {
-                transform.position = pointAPosition;
-                currentTargetPosition = pointBPosition;
-                movingToPointB = true;
-            }
-
-            waitTimer = waitTime;
+            SwitchTargetAndStartWaiting();
         }
 
         frameDelta = transform.position - previousPosition;
@@ -85,27 +54,100 @@ public class MovingPlatform : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player"))
         {
-            FPSController controller = other.GetComponent<FPSController>();
+            return;
+        }
 
-            if (controller != null)
-            {
-                controller.SetCurrentPlatform(this);
-            }
+        FPSController controller = other.GetComponent<FPSController>();
+
+        if (controller != null)
+        {
+            controller.SetCurrentPlatform(this);
         }
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player"))
         {
-            FPSController controller = other.GetComponent<FPSController>();
-
-            if (controller != null)
-            {
-                controller.ClearCurrentPlatform(this);
-            }
+            return;
         }
+
+        FPSController controller = other.GetComponent<FPSController>();
+
+        if (controller != null)
+        {
+            controller.ClearCurrentPlatform(this);
+        }
+    }
+
+    bool HasRequiredPoints()
+    {
+        if (pointA == null)
+        {
+            return false;
+        }
+
+        if (pointB == null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    void CachePointPositions()
+    {
+        pointAPosition = pointA.position;
+        pointBPosition = pointB.position;
+    }
+
+    void SetStartState()
+    {
+        if (startFromA)
+        {
+            transform.position = pointAPosition;
+            movingToPointB = true;
+            currentTargetPosition = pointBPosition;
+            return;
+        }
+
+        transform.position = pointBPosition;
+        movingToPointB = false;
+        currentTargetPosition = pointAPosition;
+    }
+
+    void UpdateWaitingState()
+    {
+        waitTimer -= Time.deltaTime;
+        frameDelta = Vector3.zero;
+    }
+
+    void MoveTowardsCurrentTarget()
+    {
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            currentTargetPosition,
+            speed * Time.deltaTime
+        );
+    }
+
+    void SwitchTargetAndStartWaiting()
+    {
+        if (movingToPointB)
+        {
+            transform.position = pointBPosition;
+            currentTargetPosition = pointAPosition;
+            movingToPointB = false;
+        }
+        else
+        {
+            transform.position = pointAPosition;
+            currentTargetPosition = pointBPosition;
+            movingToPointB = true;
+        }
+
+        waitTimer = waitTime;
     }
 }

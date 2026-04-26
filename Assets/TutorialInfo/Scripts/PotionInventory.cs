@@ -39,7 +39,7 @@ public class PotionInventory : MonoBehaviour
     private Animator animator;
 
     private int selectedSlotIndex = -1;
-    private bool isDrinking = false;
+    private bool isDrinking;
 
     private float baseMoveSpeed;
     private float baseJumpSpeed;
@@ -53,29 +53,9 @@ public class PotionInventory : MonoBehaviour
 
     void Awake()
     {
-        playerInput = GetComponent<PlayerInput>();
-        fpsController = GetComponent<FPSController>();
-        combatScript = GetComponent<CombatScript>();
-        animator = GetComponentInChildren<Animator>();
-        gameManager = FindAnyObjectByType<GameManager>();
-        hudManager = FindAnyObjectByType<HUDmanager>();
-
-        if (fpsController != null)
-        {
-            baseMoveSpeed = fpsController.moveSpeed;
-            baseJumpSpeed = fpsController.jumpSpeed;
-            baseHasDoubleJump = fpsController.hasDoubleJump;
-        }
-
-        if (combatScript != null)
-        {
-            baseAttackCooldown = combatScript.attackCooldown;
-        }
-
-        if (slots == null || slots.Length != 3)
-        {
-            slots = new PotionType[3];
-        }
+        CacheReferences();
+        CacheBaseStats();
+        EnsureSlotsArray();
     }
 
     void Start()
@@ -86,14 +66,16 @@ public class PotionInventory : MonoBehaviour
 
     void OnEnable()
     {
-        if (playerInput != null)
+        if (playerInput == null)
         {
-            attackAction = playerInput.actions.FindAction("Attack");
+            return;
+        }
 
-            if (attackAction != null)
-            {
-                attackAction.Enable();
-            }
+        attackAction = playerInput.actions.FindAction("Attack");
+
+        if (attackAction != null)
+        {
+            attackAction.Enable();
         }
     }
 
@@ -107,68 +89,26 @@ public class PotionInventory : MonoBehaviour
 
     void Update()
     {
-        if (Cursor.lockState != CursorLockMode.Locked)
-        {
-            return;
-        }
-
-        if (isDrinking)
+        if (!CanReadInventoryInput())
         {
             return;
         }
 
         Keyboard keyboard = Keyboard.current;
 
-        if (keyboard == null)
+        HandleSlotSelectionInput(keyboard);
+
+        if (HandleReturnToSwordInput(keyboard))
         {
             return;
         }
 
-        if (keyboard.digit1Key.wasPressedThisFrame)
-        {
-            SelectSlot(0);
-        }
-
-        if (keyboard.digit2Key.wasPressedThisFrame)
-        {
-            SelectSlot(1);
-        }
-
-        if (keyboard.digit3Key.wasPressedThisFrame)
-        {
-            SelectSlot(2);
-        }
-
-        if (keyboard.qKey.wasPressedThisFrame)
-        {
-            EquipSword();
-            return;
-        }
-
-        if (selectedSlotIndex >= 0)
-        {
-            if (attackAction != null && attackAction.WasPressedThisFrame())
-            {
-                StartCoroutine(DrinkSelectedPotion());
-            }
-        }
+        HandlePotionUseInput();
     }
 
     public bool HasFreeSlot()
     {
-        int i = 0;
-
-        while (i < slots.Length)
-        {
-            if (slots[i] == PotionType.None)
-            {
-                return true;
-            }
-
-            i++;
-        }
-
-        return false;
+        return FindFirstFreeSlotIndex() >= 0;
     }
 
     public bool TryAddPotion(PotionType potionType)
@@ -178,21 +118,16 @@ public class PotionInventory : MonoBehaviour
             return false;
         }
 
-        int i = 0;
+        int freeSlotIndex = FindFirstFreeSlotIndex();
 
-        while (i < slots.Length)
+        if (freeSlotIndex < 0)
         {
-            if (slots[i] == PotionType.None)
-            {
-                slots[i] = potionType;
-                RefreshHud();
-                return true;
-            }
-
-            i++;
+            return false;
         }
 
-        return false;
+        slots[freeSlotIndex] = potionType;
+        RefreshHud();
+        return true;
     }
 
     public PotionType[] GetSlots()
@@ -225,7 +160,56 @@ public class PotionInventory : MonoBehaviour
         return true;
     }
 
-    private void SelectSlot(int slotIndex)
+    void HandleSlotSelectionInput(Keyboard keyboard)
+    {
+        if (keyboard.digit1Key.wasPressedThisFrame)
+        {
+            SelectSlot(0);
+        }
+
+        if (keyboard.digit2Key.wasPressedThisFrame)
+        {
+            SelectSlot(1);
+        }
+
+        if (keyboard.digit3Key.wasPressedThisFrame)
+        {
+            SelectSlot(2);
+        }
+    }
+
+    bool HandleReturnToSwordInput(Keyboard keyboard)
+    {
+        if (!keyboard.qKey.wasPressedThisFrame)
+        {
+            return false;
+        }
+
+        EquipSword();
+        return true;
+    }
+
+    void HandlePotionUseInput()
+    {
+        if (selectedSlotIndex < 0)
+        {
+            return;
+        }
+
+        if (attackAction == null)
+        {
+            return;
+        }
+
+        if (!attackAction.WasPressedThisFrame())
+        {
+            return;
+        }
+
+        StartCoroutine(DrinkSelectedPotion());
+    }
+
+    void SelectSlot(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= slots.Length)
         {
@@ -248,7 +232,7 @@ public class PotionInventory : MonoBehaviour
         RefreshHud();
     }
 
-    private void EquipSword()
+    void EquipSword()
     {
         selectedSlotIndex = -1;
 
@@ -261,7 +245,7 @@ public class PotionInventory : MonoBehaviour
         RefreshHud();
     }
 
-    private IEnumerator DrinkSelectedPotion()
+    IEnumerator DrinkSelectedPotion()
     {
         if (!IsPotionSelected())
         {
@@ -271,6 +255,20 @@ public class PotionInventory : MonoBehaviour
         int usedSlotIndex = selectedSlotIndex;
         PotionType usedPotion = slots[usedSlotIndex];
 
+        BeginDrinking();
+
+        yield return new WaitForSeconds(drinkDuration);
+
+        ApplyPotionEffect(usedPotion);
+        slots[usedSlotIndex] = PotionType.None;
+
+        FinishDrinking();
+        EquipSword();
+        RefreshHud();
+    }
+
+    void BeginDrinking()
+    {
         isDrinking = true;
 
         if (fpsController != null)
@@ -285,85 +283,102 @@ public class PotionInventory : MonoBehaviour
 
         if (animator != null)
         {
-            if (HasTriggerParameter(drinkTriggerName))
-            {
-                animator.ResetTrigger(drinkTriggerName);
-                animator.SetTrigger(drinkTriggerName);
-            }
+            animator.ResetTrigger(drinkTriggerName);
+            animator.SetTrigger(drinkTriggerName);
         }
+    }
 
-        yield return new WaitForSeconds(drinkDuration);
-
-        ApplyPotionEffect(usedPotion);
-        slots[usedSlotIndex] = PotionType.None;
-
+    void FinishDrinking()
+    {
         if (fpsController != null)
         {
             fpsController.SetMovementLocked(false);
         }
 
         isDrinking = false;
-        EquipSword();
-        RefreshHud();
     }
 
-    private void ApplyPotionEffect(PotionType potionType)
+    void ApplyPotionEffect(PotionType potionType)
     {
         if (potionType == PotionType.Speed)
         {
-            if (speedCoroutine != null)
-            {
-                StopCoroutine(speedCoroutine);
-            }
-
-            speedCoroutine = StartCoroutine(SpeedPotionRoutine());
+            RestartSpeedPotion();
             return;
         }
 
         if (potionType == PotionType.Heal)
         {
-            if (gameManager != null)
-            {
-                gameManager.Heal(healAmount);
-            }
-
+            ApplyHealPotion();
             return;
         }
 
         if (potionType == PotionType.Strength)
         {
-            if (strengthCoroutine != null)
-            {
-                StopCoroutine(strengthCoroutine);
-            }
-
-            strengthCoroutine = StartCoroutine(StrengthPotionRoutine());
+            RestartStrengthPotion();
             return;
         }
 
         if (potionType == PotionType.JumpBoost)
         {
-            if (jumpCoroutine != null)
-            {
-                StopCoroutine(jumpCoroutine);
-            }
-
-            jumpCoroutine = StartCoroutine(JumpPotionRoutine());
+            RestartJumpPotion();
             return;
         }
 
         if (potionType == PotionType.DoubleJump)
         {
-            if (doubleJumpCoroutine != null)
-            {
-                StopCoroutine(doubleJumpCoroutine);
-            }
-
-            doubleJumpCoroutine = StartCoroutine(DoubleJumpPotionRoutine());
+            RestartDoubleJumpPotion();
         }
     }
 
-    private IEnumerator SpeedPotionRoutine()
+    void RestartSpeedPotion()
+    {
+        if (speedCoroutine != null)
+        {
+            StopCoroutine(speedCoroutine);
+        }
+
+        speedCoroutine = StartCoroutine(SpeedPotionRoutine());
+    }
+
+    void RestartJumpPotion()
+    {
+        if (jumpCoroutine != null)
+        {
+            StopCoroutine(jumpCoroutine);
+        }
+
+        jumpCoroutine = StartCoroutine(JumpPotionRoutine());
+    }
+
+    void RestartStrengthPotion()
+    {
+        if (strengthCoroutine != null)
+        {
+            StopCoroutine(strengthCoroutine);
+        }
+
+        strengthCoroutine = StartCoroutine(StrengthPotionRoutine());
+    }
+
+    void RestartDoubleJumpPotion()
+    {
+        if (doubleJumpCoroutine != null)
+        {
+            StopCoroutine(doubleJumpCoroutine);
+        }
+
+        doubleJumpCoroutine = StartCoroutine(DoubleJumpPotionRoutine());
+    }
+
+    void ApplyHealPotion()
+    {
+        if (gameManager != null)
+        {
+            gameManager.Heal(healAmount);
+        }
+    }
+
+    IEnumerator SpeedPotionRoutine()
     {
         if (fpsController == null)
         {
@@ -376,7 +391,7 @@ public class PotionInventory : MonoBehaviour
         speedCoroutine = null;
     }
 
-    private IEnumerator JumpPotionRoutine()
+    IEnumerator JumpPotionRoutine()
     {
         if (fpsController == null)
         {
@@ -389,7 +404,7 @@ public class PotionInventory : MonoBehaviour
         jumpCoroutine = null;
     }
 
-    private IEnumerator StrengthPotionRoutine()
+    IEnumerator StrengthPotionRoutine()
     {
         if (combatScript == null)
         {
@@ -402,7 +417,7 @@ public class PotionInventory : MonoBehaviour
         strengthCoroutine = null;
     }
 
-    private IEnumerator DoubleJumpPotionRoutine()
+    IEnumerator DoubleJumpPotionRoutine()
     {
         if (fpsController == null)
         {
@@ -415,14 +430,9 @@ public class PotionInventory : MonoBehaviour
         doubleJumpCoroutine = null;
     }
 
-    private void ShowHeldItem(PotionType potionType)
+    void ShowHeldItem(PotionType potionType)
     {
-        SetObjectActive(swordModel, false);
-        SetObjectActive(speedPotionModel, false);
-        SetObjectActive(healPotionModel, false);
-        SetObjectActive(strengthPotionModel, false);
-        SetObjectActive(jumpBoostPotionModel, false);
-        SetObjectActive(doubleJumpPotionModel, false);
+        SetAllHeldItemsInactive();
 
         if (potionType == PotionType.None)
         {
@@ -460,7 +470,17 @@ public class PotionInventory : MonoBehaviour
         }
     }
 
-    private void SetObjectActive(GameObject target, bool activeState)
+    void SetAllHeldItemsInactive()
+    {
+        SetObjectActive(swordModel, false);
+        SetObjectActive(speedPotionModel, false);
+        SetObjectActive(healPotionModel, false);
+        SetObjectActive(strengthPotionModel, false);
+        SetObjectActive(jumpBoostPotionModel, false);
+        SetObjectActive(doubleJumpPotionModel, false);
+    }
+
+    void SetObjectActive(GameObject target, bool activeState)
     {
         if (target != null)
         {
@@ -468,34 +488,7 @@ public class PotionInventory : MonoBehaviour
         }
     }
 
-    private bool HasTriggerParameter(string parameterName)
-    {
-        if (animator == null || string.IsNullOrEmpty(parameterName))
-        {
-            return false;
-        }
-
-        int i = 0;
-
-        while (i < animator.parameters.Length)
-        {
-            AnimatorControllerParameter parameter = animator.parameters[i];
-
-            if (parameter.name == parameterName)
-            {
-                if (parameter.type == AnimatorControllerParameterType.Trigger)
-                {
-                    return true;
-                }
-            }
-
-            i++;
-        }
-
-        return false;
-    }
-
-    private void RefreshHud()
+    void RefreshHud()
     {
         if (hudManager == null)
         {
@@ -505,6 +498,71 @@ public class PotionInventory : MonoBehaviour
         if (hudManager != null)
         {
             hudManager.UpdatePotionSlots(slots, selectedSlotIndex);
+        }
+    }
+
+    bool CanReadInventoryInput()
+    {
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            return false;
+        }
+
+        if (isDrinking)
+        {
+            return false;
+        }
+
+        return Keyboard.current != null;
+    }
+
+    int FindFirstFreeSlotIndex()
+    {
+        int i = 0;
+
+        while (i < slots.Length)
+        {
+            if (slots[i] == PotionType.None)
+            {
+                return i;
+            }
+
+            i++;
+        }
+
+        return -1;
+    }
+
+    void CacheReferences()
+    {
+        playerInput = GetComponent<PlayerInput>();
+        fpsController = GetComponent<FPSController>();
+        combatScript = GetComponent<CombatScript>();
+        animator = GetComponentInChildren<Animator>();
+        gameManager = FindAnyObjectByType<GameManager>();
+        hudManager = FindAnyObjectByType<HUDmanager>();
+    }
+
+    void CacheBaseStats()
+    {
+        if (fpsController != null)
+        {
+            baseMoveSpeed = fpsController.moveSpeed;
+            baseJumpSpeed = fpsController.jumpSpeed;
+            baseHasDoubleJump = fpsController.hasDoubleJump;
+        }
+
+        if (combatScript != null)
+        {
+            baseAttackCooldown = combatScript.attackCooldown;
+        }
+    }
+
+    void EnsureSlotsArray()
+    {
+        if (slots == null || slots.Length != 3)
+        {
+            slots = new PotionType[3];
         }
     }
 }

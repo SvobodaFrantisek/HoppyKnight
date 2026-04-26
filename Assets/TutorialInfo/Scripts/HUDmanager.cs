@@ -54,19 +54,24 @@ public class HUDmanager : MonoBehaviour
             return;
         }
 
-        if (slots.Length > 0 && potionSlot1Text != null)
+        // selectedSlotIndex si nechavame pro pripadne budouci zvyrazneni aktivniho slotu.
+        UpdatePotionSlotText(potionSlot1Text, slots, 0, "1: ");
+        UpdatePotionSlotText(potionSlot2Text, slots, 1, "2: ");
+        UpdatePotionSlotText(potionSlot3Text, slots, 2, "3: ");
+    }
+
+    void UpdatePotionSlotText(TMP_Text slotText, PotionType[] slots, int slotIndex, string prefix)
+    {
+        if (slotText == null)
         {
-            potionSlot1Text.text = "1: " + PotionTypeUtility.GetDisplayName(slots[0]);
+            return;
         }
 
-        if (slots.Length > 1 && potionSlot2Text != null)
+        if (slots.Length <= slotIndex)
         {
-            potionSlot2Text.text = "2: " + PotionTypeUtility.GetDisplayName(slots[1]);
+            return;
         }
 
-        if (slots.Length > 2 && potionSlot3Text != null)
-        {
-            potionSlot3Text.text = "3: " + PotionTypeUtility.GetDisplayName(slots[2]);
-        }
+        slotText.text = prefix + PotionTypeUtility.GetDisplayName(slots[slotIndex]);
     }
 }

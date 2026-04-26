@@ -5,7 +5,6 @@ public class ShopkeeperScript : MonoBehaviour
     public GameObject shopUI;
     public GameManager gameManager;
     public PotionInventory potionInventory;
-    public bool playerInRange = false;
 
     public int healthCost = 0;
     public int speedCost = 0;
@@ -13,37 +12,50 @@ public class ShopkeeperScript : MonoBehaviour
     public int doubleJumpCost = 0;
     public int strengthCost = 0;
 
-    private void Start()
-    {
-        if (gameManager == null)
-        {
-            gameManager = FindAnyObjectByType<GameManager>();
-        }
+    public bool playerInRange = false;
 
-        if (potionInventory == null)
-        {
-            potionInventory = FindAnyObjectByType<PotionInventory>();
-        }
+    void Start()
+    {
+        CacheReferences();
 
         if (shopUI != null)
         {
-            shopUI.SetActive(false);
+            SetShopVisible(false);
         }
         else
         {
             Debug.LogError("shop panel neni prirazen");
         }
-
     }
 
-
-    public void Update()
+    void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E) && playerInRange == true)
+        TryToggleShopFromInput();
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("Player"))
         {
-            OpenShop();
+            return;
         }
 
+        playerInRange = true;
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (!other.CompareTag("Player"))
+        {
+            return;
+        }
+
+        playerInRange = false;
+
+        if (shopUI != null && shopUI.activeSelf)
+        {
+            SetShopVisible(false);
+        }
     }
 
     public void OpenShop()
@@ -52,39 +64,9 @@ public class ShopkeeperScript : MonoBehaviour
         {
             return;
         }
-        shopUI.SetActive(!shopUI.activeSelf);
-        if (shopUI.activeSelf)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-    }
 
-    public void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            playerInRange = true;
-        }
-
+        SetShopVisible(!shopUI.activeSelf);
     }
-    public void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            playerInRange = false;
-            if (shopUI != null && shopUI.activeSelf)
-            {
-                OpenShop();
-            }
-        }
-    }
-
 
     public void BuyHealth()
     {
@@ -111,18 +93,63 @@ public class ShopkeeperScript : MonoBehaviour
         TryBuyPotion(PotionType.Strength, strengthCost);
     }
 
-    private bool TryBuyPotion(PotionType potionType, int cost)
+    bool TryBuyPotion(PotionType potionType, int cost)
     {
-        if (potionInventory == null)
+        CacheReferences();
+
+        if (!HasRequiredReferences())
         {
-            potionInventory = FindAnyObjectByType<PotionInventory>();
+            return false;
         }
 
+        if (!potionInventory.HasFreeSlot())
+        {
+            Debug.Log("Inventar potionu je plny.");
+            return false;
+        }
+
+        if (!gameManager.TrySpendCoins(cost))
+        {
+            return false;
+        }
+
+        if (!potionInventory.TryAddPotion(potionType))
+        {
+            Debug.LogWarning("Potion se nepodarilo vlozit do inventare.");
+            return false;
+        }
+
+        return true;
+    }
+
+    void TryToggleShopFromInput()
+    {
+        if (!playerInRange)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            OpenShop();
+        }
+    }
+
+    void CacheReferences()
+    {
         if (gameManager == null)
         {
             gameManager = FindAnyObjectByType<GameManager>();
         }
 
+        if (potionInventory == null)
+        {
+            potionInventory = FindAnyObjectByType<PotionInventory>();
+        }
+    }
+
+    bool HasRequiredReferences()
+    {
         if (potionInventory == null)
         {
             Debug.LogWarning("PotionInventory nebyl nalezen.");
@@ -135,28 +162,26 @@ public class ShopkeeperScript : MonoBehaviour
             return false;
         }
 
-        if (!potionInventory.HasFreeSlot())
-        {
-            Debug.Log("Inventar potionu je plny.");
-            return false;
-        }
-
-        bool spendSuccess = gameManager.TrySpendCoins(cost);
-
-        if (!spendSuccess)
-        {
-            return false;
-        }
-
-        bool addSuccess = potionInventory.TryAddPotion(potionType);
-
-        if (!addSuccess)
-        {
-            Debug.LogWarning("Potion se nepodarilo vlozit do inventare.");
-            return false;
-        }
-
         return true;
     }
-}
 
+    void SetShopVisible(bool visibleState)
+    {
+        if (shopUI == null)
+        {
+            return;
+        }
+
+        shopUI.SetActive(visibleState);
+
+        if (visibleState)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            return;
+        }
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+}

@@ -16,7 +16,6 @@ public class RotatingLog : MonoBehaviour
         }
 
         normalizedAxis.Normalize();
-
         Vector3 rotationStep = normalizedAxis * rotationSpeed * Time.deltaTime;
 
         if (useLocalSpace)

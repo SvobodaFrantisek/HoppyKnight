@@ -10,44 +10,40 @@ public class CombatScript : MonoBehaviour
     [Header("Visual")]
     public GameObject traileffect;
 
-    [Header("Hitbox")]
-    public GameObject attackHitbox;
-
-    private PlayerInput _playerInput;
-    private InputAction _attackAction;
-    private float _lastAttackTime;
+    private PlayerInput playerInput;
+    private InputAction attackAction;
+    private float lastAttackTime;
     private bool combatBlocked;
-    private bool hitboxActive = false;
-    private bool isAttackAnimationPlaying = false;
-    private bool hasRegisteredHitThisAttack = false;
+    private bool attackActive;
+    private bool hasRegisteredHitThisAttack;
 
     void Awake()
     {
-        _playerInput = GetComponent<PlayerInput>();
+        playerInput = GetComponent<PlayerInput>();
 
         if (animator == null)
         {
             animator = GetComponentInChildren<Animator>();
         }
 
-        TrailOff();
+        SetTrailActive(false);
     }
 
     void OnEnable()
     {
-        _attackAction = _playerInput.actions.FindAction("Attack");
+        attackAction = playerInput.actions.FindAction("Attack");
 
-        if (_attackAction != null)
+        if (attackAction != null)
         {
-            _attackAction.Enable();
+            attackAction.Enable();
         }
     }
 
     void OnDisable()
     {
-        if (_attackAction != null)
+        if (attackAction != null)
         {
-            _attackAction.Disable();
+            attackAction.Disable();
         }
 
         EndAttackAnimation();
@@ -55,38 +51,22 @@ public class CombatScript : MonoBehaviour
 
     void Update()
     {
-        if (Cursor.lockState != CursorLockMode.Locked)
+        if (!CanReadAttackInput())
         {
             return;
         }
 
-        if (combatBlocked)
+        if (!CanAttack())
         {
             return;
         }
 
-        if (_attackAction != null && _attackAction.triggered && CanAttack() && !isAttackAnimationPlaying)
+        if (attackActive)
         {
-            Attack();
+            return;
         }
-    }
 
-    bool CanAttack()
-    {
-        return Time.time >= _lastAttackTime + attackCooldown;
-    }
-
-    void Attack()
-    {
-        _lastAttackTime = Time.time;
-        hasRegisteredHitThisAttack = false;
-        TrailOff();
-
-        if (animator != null)
-        {
-            animator.ResetTrigger("Attack");
-            animator.SetTrigger("Attack");
-        }
+        Attack();
     }
 
     public void StartAttackAnimation()
@@ -96,62 +76,16 @@ public class CombatScript : MonoBehaviour
             return;
         }
 
-        isAttackAnimationPlaying = true;
-        hitboxActive = true;
+        attackActive = true;
         hasRegisteredHitThisAttack = false;
-
-        if (traileffect != null)
-        {
-            traileffect.SetActive(true);
-        }
+        SetTrailActive(true);
     }
 
     public void EndAttackAnimation()
     {
-        isAttackAnimationPlaying = false;
-        hitboxActive = false;
+        attackActive = false;
         hasRegisteredHitThisAttack = false;
-
-        if (traileffect != null)
-        {
-            traileffect.SetActive(false);
-        }
-    }
-
-    public void TrailOn()
-    {
-        if (traileffect != null)
-        {
-            traileffect.SetActive(true);
-        }
-    }
-
-    public void TrailOff()
-    {
-        if (traileffect != null)
-        {
-            traileffect.SetActive(false);
-        }
-    }
-
-    public void HitboxOn()
-    {
-        if (combatBlocked)
-        {
-            return;
-        }
-
-        if (!isAttackAnimationPlaying)
-        {
-            return;
-        }
-
-        hitboxActive = true;
-    }
-
-    public void HitboxOff()
-    {
-        hitboxActive = false;
+        SetTrailActive(false);
     }
 
     public void SetCombatBlocked(bool blocked)
@@ -160,9 +94,9 @@ public class CombatScript : MonoBehaviour
 
         if (combatBlocked)
         {
-            isAttackAnimationPlaying = false;
+            attackActive = false;
             hasRegisteredHitThisAttack = false;
-            TrailOff();
+            SetTrailActive(false);
         }
     }
 
@@ -173,12 +107,7 @@ public class CombatScript : MonoBehaviour
             return false;
         }
 
-        if (!isAttackAnimationPlaying)
-        {
-            return false;
-        }
-
-        if (!hitboxActive)
+        if (!attackActive)
         {
             return false;
         }
@@ -195,5 +124,51 @@ public class CombatScript : MonoBehaviour
     {
         hasRegisteredHitThisAttack = true;
         Debug.Log("hit");
+    }
+
+    bool CanReadAttackInput()
+    {
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            return false;
+        }
+
+        if (combatBlocked)
+        {
+            return false;
+        }
+
+        if (attackAction == null)
+        {
+            return false;
+        }
+
+        return attackAction.triggered;
+    }
+
+    bool CanAttack()
+    {
+        return Time.time >= lastAttackTime + attackCooldown;
+    }
+
+    void Attack()
+    {
+        lastAttackTime = Time.time;
+        hasRegisteredHitThisAttack = false;
+        SetTrailActive(false);
+
+        if (animator != null)
+        {
+            animator.ResetTrigger("Attack");
+            animator.SetTrigger("Attack");
+        }
+    }
+
+    void SetTrailActive(bool activeState)
+    {
+        if (traileffect != null)
+        {
+            traileffect.SetActive(activeState);
+        }
     }
 }

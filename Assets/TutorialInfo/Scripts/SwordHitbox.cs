@@ -4,22 +4,48 @@ using UnityEngine;
 public class SwordHitbox : MonoBehaviour
 {
     public CombatScript combatScript;
-    private bool isInsideEnemyHitbox = false;
+
+    private bool isInsideEnemyHitbox;
 
     void Awake()
     {
-        FindCombatScript();
+        CacheCombatScript();
         PrepareHitbox();
     }
 
     void OnEnable()
     {
-        FindCombatScript();
+        CacheCombatScript();
         PrepareHitbox();
         isInsideEnemyHitbox = false;
     }
 
     void Update()
+    {
+        TryRegisterCurrentHit();
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (!IsEnemyHitbox(other))
+        {
+            return;
+        }
+
+        isInsideEnemyHitbox = true;
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (!IsEnemyHitbox(other))
+        {
+            return;
+        }
+
+        isInsideEnemyHitbox = false;
+    }
+
+    void TryRegisterCurrentHit()
     {
         if (combatScript == null)
         {
@@ -39,37 +65,17 @@ public class SwordHitbox : MonoBehaviour
         combatScript.RegisterHit();
     }
 
-    private void OnTriggerEnter(Collider other)
+    bool IsEnemyHitbox(Collider other)
     {
         if (other == null)
         {
-            return;
+            return false;
         }
 
-        if (other.gameObject.layer != LayerMask.NameToLayer("EnemyHitbox"))
-        {
-            return;
-        }
-
-        isInsideEnemyHitbox = true;
+        return other.gameObject.layer == LayerMask.NameToLayer("EnemyHitbox");
     }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other == null)
-        {
-            return;
-        }
-
-        if (other.gameObject.layer != LayerMask.NameToLayer("EnemyHitbox"))
-        {
-            return;
-        }
-
-        isInsideEnemyHitbox = false;
-    }
-
-    private void FindCombatScript()
+    void CacheCombatScript()
     {
         if (combatScript == null)
         {
@@ -77,7 +83,7 @@ public class SwordHitbox : MonoBehaviour
         }
     }
 
-    private void PrepareHitbox()
+    void PrepareHitbox()
     {
         Collider hitboxCollider = GetComponent<Collider>();
 

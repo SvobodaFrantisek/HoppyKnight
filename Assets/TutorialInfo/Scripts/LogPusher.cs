@@ -2,28 +2,31 @@ using UnityEngine;
 
 public class LogPusher : MonoBehaviour
 {
-    [Header("Síla odtlačení od klády")]
+    [Header("Sila odstrceni od klady")]
     public float pushForce = 5f;
 
-    // Tato funkce se volá automaticky, když se hráč nachází uvnitř zóny (Triggeru)
     void OnTriggerStay(Collider other)
     {
-        // Zajímá nás jenom hráč
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player"))
         {
-            CharacterController cc = other.GetComponent<CharacterController>();
-            
-            if (cc != null)
-            {
-                // 1. Spočítáme směr (šipku) od středu klády směrem ven k hráči
-                Vector3 direction = other.transform.position - transform.position;
-                
-                // 2. Chceme hráče odstrkávat jen do stran, ne do vzduchu
-                direction.y = 0;
-
-                // 3. Řekneme hráči, ať kousek uhne
-                cc.Move(direction.normalized * pushForce * Time.deltaTime);
-            }
+            return;
         }
+
+        CharacterController characterController = other.GetComponent<CharacterController>();
+
+        if (characterController == null)
+        {
+            return;
+        }
+
+        PushPlayer(characterController, other.transform.position);
+    }
+
+    void PushPlayer(CharacterController characterController, Vector3 playerPosition)
+    {
+        Vector3 direction = playerPosition - transform.position;
+        direction.y = 0f;
+
+        characterController.Move(direction.normalized * pushForce * Time.deltaTime);
     }
 }

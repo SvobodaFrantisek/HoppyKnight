@@ -11,79 +11,40 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        hudManager = FindAnyObjectByType<HUDmanager>();
+        CacheHudManager();
 
         if (hudManager != null)
         {
-            hudManager.UpdateCoins(coins);
-            hudManager.UpdateGems(gems, remainGems);
-            hudManager.UpdateHealth(health);
+            RefreshAllHud();
         }
     }
 
     public void AddCoin(int amount)
     {
         coins += amount;
-
-        if (hudManager != null)
-        {
-            hudManager.UpdateCoins(coins);
-        }
-        else
-        {
-            Debug.LogError("HUDmanager nenalezen, nelze aktualizovat zobrazeni minci.");
-        }
-
+        RefreshCoinsHud();
         Debug.Log("Coins: " + coins);
     }
 
-    public void addGem(int amount)
+    public void AddGem(int amount)
     {
         gems += amount;
-
-        if (hudManager != null)
-        {
-            hudManager.UpdateGems(gems, remainGems);
-        }
-        else
-        {
-            Debug.LogError("HUDmanager nenalezen, nelze aktualizovat zobrazeni gemu.");
-        }
-
+        RefreshGemsHud();
         Debug.Log("Gems: " + gems);
     }
 
     public bool TrySpendCoins(int cost)
     {
-        if (coins >= cost)
+        if (coins < cost)
         {
-            coins -= cost;
-
-            if (hudManager != null)
-            {
-                hudManager.UpdateCoins(coins);
-            }
-            else
-            {
-                Debug.LogError("HUDmanager nenalezen, nelze aktualizovat zobrazeni minci.");
-            }
-
-            Debug.Log("Item koupen, zustatek minci: " + coins);
-            return true;
+            Debug.Log("Nemas dostatek minci na koupi tohoto itemu.");
+            return false;
         }
 
-        Debug.Log("Nemas dostatek minci na koupi tohoto itemu.");
-        return false;
-    }
-
-    public void buyItem(int cost)
-    {
-        TrySpendCoins(cost);
-    }
-
-    public int getCoins()
-    {
-        return coins;
+        coins -= cost;
+        RefreshCoinsHud();
+        Debug.Log("Item koupen, zustatek minci: " + coins);
+        return true;
     }
 
     public void Heal(int amount)
@@ -95,9 +56,79 @@ public class GameManager : MonoBehaviour
             health = maxHealth;
         }
 
+        RefreshHealthHud();
+    }
+
+    // Legacy wrapper ponechany kvuli stavajicim referencim.
+    public void addGem(int amount)
+    {
+        AddGem(amount);
+    }
+
+    // Legacy wrapper ponechany kvuli stavajicim referencim.
+    public void buyItem(int cost)
+    {
+        TrySpendCoins(cost);
+    }
+
+    // Legacy wrapper ponechany kvuli stavajicim referencim.
+    public int getCoins()
+    {
+        return GetCoins();
+    }
+
+    public int GetCoins()
+    {
+        return coins;
+    }
+
+    void CacheHudManager()
+    {
+        if (hudManager != null)
+        {
+            return;
+        }
+
+        hudManager = FindAnyObjectByType<HUDmanager>();
+    }
+
+    void RefreshAllHud()
+    {
+        RefreshCoinsHud();
+        RefreshGemsHud();
+        RefreshHealthHud();
+    }
+
+    void RefreshCoinsHud()
+    {
+        if (hudManager != null)
+        {
+            hudManager.UpdateCoins(coins);
+            return;
+        }
+
+        Debug.LogError("HUDmanager nenalezen, nelze aktualizovat zobrazeni minci.");
+    }
+
+    void RefreshGemsHud()
+    {
+        if (hudManager != null)
+        {
+            hudManager.UpdateGems(gems, remainGems);
+            return;
+        }
+
+        Debug.LogError("HUDmanager nenalezen, nelze aktualizovat zobrazeni gemu.");
+    }
+
+    void RefreshHealthHud()
+    {
         if (hudManager != null)
         {
             hudManager.UpdateHealth(health);
+            return;
         }
+
+        Debug.LogError("HUDmanager nenalezen, nelze aktualizovat zobrazeni zdravi.");
     }
 }

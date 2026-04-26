@@ -19,21 +19,8 @@ public class FallingPlatform : MonoBehaviour
 
     void Awake()
     {
-        startPosition = transform.position;
-        startRotation = transform.rotation;
-        platformRenderer = GetComponent<MeshRenderer>();
-        mainCollider = GetComponent<MeshCollider>();
-        triggerCollider = GetComponent<BoxCollider>();
-    }
-
-    public void Activate()
-    {
-        if (isTriggered)
-        {
-            return;
-        }
-
-        StartCoroutine(FallRoutine());
+        CacheStartTransform();
+        CacheComponents();
     }
 
     void OnTriggerEnter(Collider other)
@@ -46,49 +33,72 @@ public class FallingPlatform : MonoBehaviour
         Activate();
     }
 
+    public void Activate()
+    {
+        if (isTriggered)
+        {
+            return;
+        }
+
+        StartCoroutine(FallRoutine());
+    }
+
     IEnumerator FallRoutine()
     {
         isTriggered = true;
 
+        yield return ShakeBeforeFall();
+
+        ResetTransform();
+        SetVisualState(false);
+
+        yield return new WaitForSeconds(resetDelay);
+
+        ResetTransform();
+        SetVisualState(true);
+        isTriggered = false;
+    }
+
+    IEnumerator ShakeBeforeFall()
+    {
         float timer = 0f;
 
         while (timer < fallDelay)
         {
             timer += Time.deltaTime;
-
-            float progress = 1f;
-
-            if (fallDelay > 0f)
-            {
-                progress = timer / fallDelay;
-
-                if (progress > 1f)
-                {
-                    progress = 1f;
-                }
-            }
-
-            float currentShakeAmount = Mathf.Lerp(minShakeAmount, maxShakeAmount, progress);
-            float currentShakeSpeed = Mathf.Lerp(minShakeSpeed, maxShakeSpeed, progress);
-            float shakeTime = timer * currentShakeSpeed;
-
-            float offsetX = Mathf.Sin(shakeTime) * currentShakeAmount;
-            float offsetZ = Mathf.Cos(shakeTime * 1.15f) * currentShakeAmount;
-
-            transform.position = startPosition + new Vector3(offsetX, 0f, offsetZ);
-
+            UpdateShake(timer);
             yield return null;
         }
+    }
 
-        transform.position = startPosition;
-        SetVisualState(false);
+    void UpdateShake(float timer)
+    {
+        float progress = 1f;
 
-        yield return new WaitForSeconds(resetDelay);
+        if (fallDelay > 0f)
+        {
+            progress = timer / fallDelay;
 
+            if (progress > 1f)
+            {
+                progress = 1f;
+            }
+        }
+
+        float currentShakeAmount = Mathf.Lerp(minShakeAmount, maxShakeAmount, progress);
+        float currentShakeSpeed = Mathf.Lerp(minShakeSpeed, maxShakeSpeed, progress);
+        float shakeTime = timer * currentShakeSpeed;
+
+        float offsetX = Mathf.Sin(shakeTime) * currentShakeAmount;
+        float offsetZ = Mathf.Cos(shakeTime * 1.15f) * currentShakeAmount;
+
+        transform.position = startPosition + new Vector3(offsetX, 0f, offsetZ);
+    }
+
+    void ResetTransform()
+    {
         transform.position = startPosition;
         transform.rotation = startRotation;
-        SetVisualState(true);
-        isTriggered = false;
     }
 
     void SetVisualState(bool enabledState)
@@ -107,5 +117,18 @@ public class FallingPlatform : MonoBehaviour
         {
             triggerCollider.enabled = enabledState;
         }
+    }
+
+    void CacheStartTransform()
+    {
+        startPosition = transform.position;
+        startRotation = transform.rotation;
+    }
+
+    void CacheComponents()
+    {
+        platformRenderer = GetComponent<MeshRenderer>();
+        mainCollider = GetComponent<MeshCollider>();
+        triggerCollider = GetComponent<BoxCollider>();
     }
 }
