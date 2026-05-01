@@ -1,23 +1,24 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
 public class SwordHitbox : MonoBehaviour
 {
     public CombatScript combatScript;
 
     private bool isInsideEnemyHitbox;
+    private EnemyHealth currentEnemyHealth;
 
     void Awake()
     {
         CacheCombatScript();
-        PrepareHitbox();
+        ValidateHitboxSettings();
     }
 
     void OnEnable()
     {
         CacheCombatScript();
-        PrepareHitbox();
+        ValidateHitboxSettings();
         isInsideEnemyHitbox = false;
+        currentEnemyHealth = null;
     }
 
     void Update()
@@ -27,22 +28,31 @@ public class SwordHitbox : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (!IsEnemyHitbox(other))
+        EnemyHealth enemyHealth = GetEnemyHealth(other);
+
+        if (enemyHealth == null)
         {
             return;
         }
 
         isInsideEnemyHitbox = true;
+        currentEnemyHealth = enemyHealth;
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (!IsEnemyHitbox(other))
+        EnemyHealth enemyHealth = GetEnemyHealth(other);
+
+        if (enemyHealth == null)
         {
             return;
         }
 
-        isInsideEnemyHitbox = false;
+        if (enemyHealth == currentEnemyHealth)
+        {
+            isInsideEnemyHitbox = false;
+            currentEnemyHealth = null;
+        }
     }
 
     void TryRegisterCurrentHit()
@@ -62,7 +72,23 @@ public class SwordHitbox : MonoBehaviour
             return;
         }
 
+        if (currentEnemyHealth == null)
+        {
+            return;
+        }
+
+        currentEnemyHealth.TakeDamage(combatScript.attackDamage);
         combatScript.RegisterHit();
+    }
+
+    EnemyHealth GetEnemyHealth(Collider other)
+    {
+        if (!IsEnemyHitbox(other))
+        {
+            return null;
+        }
+
+        return other.GetComponentInParent<EnemyHealth>();
     }
 
     bool IsEnemyHitbox(Collider other)
@@ -83,23 +109,19 @@ public class SwordHitbox : MonoBehaviour
         }
     }
 
-    void PrepareHitbox()
+    void ValidateHitboxSettings()
     {
         Collider hitboxCollider = GetComponent<Collider>();
 
-        if (hitboxCollider != null)
+        if (hitboxCollider == null)
         {
-            hitboxCollider.isTrigger = true;
+            Debug.LogWarning(gameObject.name + " nema Collider pro SwordHitbox.");
+            return;
         }
 
-        Rigidbody hitboxBody = GetComponent<Rigidbody>();
-
-        if (hitboxBody == null)
+        if (!hitboxCollider.isTrigger)
         {
-            hitboxBody = gameObject.AddComponent<Rigidbody>();
+            Debug.LogWarning(gameObject.name + " ma SwordHitbox collider, ale neni nastaveny jako Trigger.");
         }
-
-        hitboxBody.isKinematic = true;
-        hitboxBody.useGravity = false;
     }
 }

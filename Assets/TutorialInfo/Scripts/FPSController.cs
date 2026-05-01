@@ -163,6 +163,11 @@ public class FPSController : MonoBehaviour
         }
     }
 
+    public bool IsDodging()
+    {
+        return isDodging;
+    }
+
     public void SetCurrentPlatform(MovingPlatform platform)
     {
         currentPlatform = platform;

@@ -24,11 +24,16 @@ public class EnemyThrowerMovement : MonoBehaviour
 
     [Header("Animation")]
     public Animator animator;
+    public string speedParameterName = "Speed";
+    public string walkingForwardParameterName = "IsWalkingForward";
+    public string walkingBackParameterName = "IsWalkingBack";
 
     private NavMeshAgent agent;
     private int currentPatrolIndex;
     private float waitTimer;
     private bool fightingPlayer;
+    private bool walkingForward;
+    private bool walkingBack;
 
     void Awake()
     {
@@ -94,6 +99,7 @@ public class EnemyThrowerMovement : MonoBehaviour
         if (patrolPoints == null || patrolPoints.Length == 0)
         {
             agent.isStopped = true;
+            SetMovementAnimation(false, false);
             return;
         }
 
@@ -103,10 +109,12 @@ public class EnemyThrowerMovement : MonoBehaviour
         {
             waitTimer -= Time.deltaTime;
             agent.isStopped = true;
+            SetMovementAnimation(false, false);
             return;
         }
 
         agent.isStopped = false;
+        SetMovementAnimation(true, false);
 
         if (!agent.pathPending && agent.remainingDistance <= patrolPointReachDistance)
         {
@@ -140,6 +148,7 @@ public class EnemyThrowerMovement : MonoBehaviour
         }
 
         agent.isStopped = true;
+        SetMovementAnimation(false, false);
     }
 
     void MoveCloserToPlayer()
@@ -147,6 +156,7 @@ public class EnemyThrowerMovement : MonoBehaviour
         agent.isStopped = false;
         agent.stoppingDistance = preferredDistance;
         agent.SetDestination(player.position);
+        SetMovementAnimation(true, false);
     }
 
     void MoveAwayFromPlayer()
@@ -156,6 +166,7 @@ public class EnemyThrowerMovement : MonoBehaviour
 
         if (directionAwayFromPlayer == Vector3.zero)
         {
+            SetMovementAnimation(false, false);
             return;
         }
 
@@ -168,7 +179,11 @@ public class EnemyThrowerMovement : MonoBehaviour
             agent.isStopped = false;
             agent.stoppingDistance = 0f;
             agent.SetDestination(navMeshHit.position);
+            SetMovementAnimation(false, true);
+            return;
         }
+
+        SetMovementAnimation(false, false);
     }
 
     void MoveToNextPatrolPoint()
@@ -251,6 +266,14 @@ public class EnemyThrowerMovement : MonoBehaviour
             return;
         }
 
-        animator.SetFloat("Speed", agent.velocity.magnitude);
+        animator.SetFloat(speedParameterName, agent.velocity.magnitude);
+        animator.SetBool(walkingForwardParameterName, walkingForward);
+        animator.SetBool(walkingBackParameterName, walkingBack);
+    }
+
+    void SetMovementAnimation(bool forward, bool back)
+    {
+        walkingForward = forward;
+        walkingBack = back;
     }
 }

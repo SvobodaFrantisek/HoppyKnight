@@ -5,6 +5,7 @@ public class CombatScript : MonoBehaviour
 {
     [Header("Attack")]
     public float attackCooldown = 0.8f;
+    public int attackDamage = 20;
     public Animator animator;
 
     [Header("Visual")]

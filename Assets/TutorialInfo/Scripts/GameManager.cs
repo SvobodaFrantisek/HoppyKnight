@@ -59,6 +59,29 @@ public class GameManager : MonoBehaviour
         RefreshHealthHud();
     }
 
+    public void TakeDamage(int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        health -= amount;
+
+        if (health < 0)
+        {
+            health = 0;
+        }
+
+        RefreshHealthHud();
+        Debug.Log("Player HP: " + health);
+
+        if (health <= 0)
+        {
+            Debug.Log("Player is dead.");
+        }
+    }
+
     // Legacy wrapper ponechany kvuli stavajicim referencim.
     public void addGem(int amount)
     {
