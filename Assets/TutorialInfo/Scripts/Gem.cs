@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class Gem : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni pohybu
+    // --------------------
     [Header("Idle")]
     public float rotationSpeed = 100f;
 
@@ -13,6 +16,9 @@ public class Gem : MonoBehaviour
 
     private Transform playerPosition;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Start()
     {
         CacheGameManager();
@@ -44,11 +50,17 @@ public class Gem : MonoBehaviour
         StartFlyToPlayer(other.transform);
     }
 
+    // --------------------
+    // Idle rotace
+    // --------------------
     void UpdateIdleMotion()
     {
         transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
     }
 
+    // --------------------
+    // Let gemu k hraci
+    // --------------------
     void UpdateFlyToPlayer()
     {
         if (playerPosition == null)
@@ -67,6 +79,9 @@ public class Gem : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Sebrani gemu
+    // --------------------
     void StartFlyToPlayer(Transform target)
     {
         playerPosition = target;
@@ -83,6 +98,9 @@ public class Gem : MonoBehaviour
         Destroy(gameObject);
     }
 
+    // --------------------
+    // Reference
+    // --------------------
     void CacheGameManager()
     {
         gameManager = FindAnyObjectByType<GameManager>();

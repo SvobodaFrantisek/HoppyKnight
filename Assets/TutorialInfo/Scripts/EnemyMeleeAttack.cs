@@ -3,10 +3,16 @@ using UnityEngine.UI;
 
 public class EnemyMeleeAttack : MonoBehaviour
 {
+    // --------------------
+    // Cil a dosah
+    // --------------------
     [Header("Target")]
     public Transform player;
     public float attackRange = 2f;
 
+    // --------------------
+    // Nastaveni utoku
+    // --------------------
     [Header("Attack")]
     public int damage = 15;
     public float attackCooldown = 2f;
@@ -19,11 +25,17 @@ public class EnemyMeleeAttack : MonoBehaviour
     [Header("Animation")]
     public Animator animator;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private float cooldownTimer;
     private float attackWindowTimer;
     private bool attackActive;
     private bool hasHitThisAttack;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         if (animator == null)
@@ -48,6 +60,9 @@ public class EnemyMeleeAttack : MonoBehaviour
         RefreshAttackSlider();
     }
 
+    // --------------------
+    // API pro hitbox mece/nepritele
+    // --------------------
     public bool CanHitNow()
     {
         if (!attackActive)
@@ -77,9 +92,11 @@ public class EnemyMeleeAttack : MonoBehaviour
 
         playerHitbox.TakeDamage(damage);
         hasHitThisAttack = true;
-        Debug.Log(gameObject.name + " hit player.");
     }
 
+    // --------------------
+    // Cooldown a utocne okno
+    // --------------------
     void UpdateCooldown()
     {
         if (cooldownTimer <= 0f)
@@ -110,6 +127,9 @@ public class EnemyMeleeAttack : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Spusteni utoku
+    // --------------------
     void TryStartAttack()
     {
         if (attackActive)
@@ -155,6 +175,9 @@ public class EnemyMeleeAttack : MonoBehaviour
         return distanceToPlayer <= attackRange;
     }
 
+    // --------------------
+    // UI cooldownu
+    // --------------------
     void RefreshAttackSlider()
     {
         if (attackProgressSlider == null)
@@ -188,6 +211,9 @@ public class EnemyMeleeAttack : MonoBehaviour
         return progress;
     }
 
+    // --------------------
+    // Hledani hrace
+    // --------------------
     void FindPlayerIfNeeded()
     {
         if (player != null)

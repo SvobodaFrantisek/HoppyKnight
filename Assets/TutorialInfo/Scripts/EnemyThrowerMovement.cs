@@ -4,18 +4,30 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyThrowerMovement : MonoBehaviour
 {
+    // --------------------
+    // Cil
+    // --------------------
     [Header("Target")]
     public Transform player;
 
+    // --------------------
+    // Patrolovani
+    // --------------------
     [Header("Patrol")]
     public Transform[] patrolPoints;
     public float patrolPointReachDistance = 0.5f;
     public float waitAtPatrolPoint = 1f;
 
+    // --------------------
+    // Detekce hrace
+    // --------------------
     [Header("Detection")]
     public float detectionRange = 10f;
     public float losePlayerRange = 14f;
 
+    // --------------------
+    // Pohyb v boji
+    // --------------------
     [Header("Combat Movement")]
     public float preferredDistance = 6f;
     public float distanceTolerance = 1f;
@@ -28,6 +40,9 @@ public class EnemyThrowerMovement : MonoBehaviour
     public string walkingForwardParameterName = "IsWalkingForward";
     public string walkingBackParameterName = "IsWalkingBack";
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private NavMeshAgent agent;
     private int currentPatrolIndex;
     private float waitTimer;
@@ -35,6 +50,9 @@ public class EnemyThrowerMovement : MonoBehaviour
     private bool walkingForward;
     private bool walkingBack;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -70,6 +88,9 @@ public class EnemyThrowerMovement : MonoBehaviour
         UpdateAnimation();
     }
 
+    // --------------------
+    // Prepinani mezi patrolem a bojem
+    // --------------------
     void UpdateState()
     {
         if (player == null)
@@ -94,6 +115,9 @@ public class EnemyThrowerMovement : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Patrolovani
+    // --------------------
     void HandlePatrol()
     {
         if (patrolPoints == null || patrolPoints.Length == 0)
@@ -122,6 +146,9 @@ public class EnemyThrowerMovement : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Pohyb okolo hrace
+    // --------------------
     void HandleCombatMovement()
     {
         if (player == null)
@@ -186,6 +213,9 @@ public class EnemyThrowerMovement : MonoBehaviour
         SetMovementAnimation(false, false);
     }
 
+    // --------------------
+    // Patrol pointy
+    // --------------------
     void MoveToNextPatrolPoint()
     {
         currentPatrolIndex++;
@@ -216,6 +246,9 @@ public class EnemyThrowerMovement : MonoBehaviour
         agent.SetDestination(patrolPoint.position);
     }
 
+    // --------------------
+    // Otaceni modelu
+    // --------------------
     void RotateTowardsPlayer()
     {
         Vector3 directionToPlayer = player.position - transform.position;
@@ -244,6 +277,9 @@ public class EnemyThrowerMovement : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
     }
 
+    // --------------------
+    // Reference a animace
+    // --------------------
     void FindPlayerIfNeeded()
     {
         if (player != null)

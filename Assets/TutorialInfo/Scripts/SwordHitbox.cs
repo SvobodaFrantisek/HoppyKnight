@@ -2,11 +2,20 @@ using UnityEngine;
 
 public class SwordHitbox : MonoBehaviour
 {
+    // --------------------
+    // Napojeni na combat
+    // --------------------
     public CombatScript combatScript;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private bool isInsideEnemyHitbox;
     private EnemyHealth currentEnemyHealth;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         CacheCombatScript();
@@ -21,6 +30,9 @@ public class SwordHitbox : MonoBehaviour
         currentEnemyHealth = null;
     }
 
+    // --------------------
+    // Trigger mece
+    // --------------------
     void Update()
     {
         TryRegisterCurrentHit();
@@ -55,6 +67,9 @@ public class SwordHitbox : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Zapocitani hitu
+    // --------------------
     void TryRegisterCurrentHit()
     {
         if (combatScript == null)
@@ -81,6 +96,9 @@ public class SwordHitbox : MonoBehaviour
         combatScript.RegisterHit();
     }
 
+    // --------------------
+    // Hledani EnemyHitboxu
+    // --------------------
     EnemyHealth GetEnemyHealth(Collider other)
     {
         if (!IsEnemyHitbox(other))
@@ -101,6 +119,9 @@ public class SwordHitbox : MonoBehaviour
         return other.gameObject.layer == LayerMask.NameToLayer("EnemyHitbox");
     }
 
+    // --------------------
+    // Reference a validace
+    // --------------------
     void CacheCombatScript()
     {
         if (combatScript == null)

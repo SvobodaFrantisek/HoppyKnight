@@ -3,6 +3,9 @@ using UnityEngine.UI;
 
 public class EnemyHealth : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni z Inspectoru
+    // --------------------
     public int maxHealth = 100;
     public int health = 100;
     public Slider healthSlider;
@@ -16,6 +19,9 @@ public class EnemyHealth : MonoBehaviour
 
     private bool isDead;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         if (animator == null)
@@ -30,6 +36,9 @@ public class EnemyHealth : MonoBehaviour
         RefreshHealthSlider();
     }
 
+    // --------------------
+    // Prijimani damage
+    // --------------------
     public void TakeDamage(int damageAmount)
     {
         if (isDead)
@@ -50,7 +59,6 @@ public class EnemyHealth : MonoBehaviour
         }
 
         RefreshHealthSlider();
-        Debug.Log(gameObject.name + " HP: " + health);
 
         if (health <= 0)
         {
@@ -61,6 +69,9 @@ public class EnemyHealth : MonoBehaviour
         PlayGetHitAnimation();
     }
 
+    // --------------------
+    // UI zdravi
+    // --------------------
     void RefreshHealthSlider()
     {
         if (healthSlider == null)
@@ -72,11 +83,13 @@ public class EnemyHealth : MonoBehaviour
         healthSlider.value = health;
     }
 
+    // --------------------
+    // Smrt enemaka
+    // --------------------
     void Die()
     {
         isDead = true;
         PlayDieAnimation();
-        Debug.Log(gameObject.name + " died.");
 
         if (objectToDisableOnDeath != null)
         {
@@ -90,6 +103,9 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Animator
+    // --------------------
     void PlayGetHitAnimation()
     {
         if (animator != null)

@@ -1,3 +1,4 @@
+// Vsechny typy potionu, ktere muze inventar drzet ve slotech.
 public enum PotionType
 {
     None = 0,
@@ -10,6 +11,7 @@ public enum PotionType
 
 public static class PotionTypeUtility
 {
+    // Text, ktery se ukazuje v jednoduchem HUD slotu.
     public static string GetDisplayName(PotionType potionType)
     {
         if (potionType == PotionType.Speed)

@@ -3,6 +3,9 @@ using UnityEngine;
 
 public class FallingPlatform : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni padu
+    // --------------------
     public float fallDelay = 0.5f;
     public float resetDelay = 2f;
     public float minShakeAmount = 0.02f;
@@ -10,6 +13,9 @@ public class FallingPlatform : MonoBehaviour
     public float minShakeSpeed = 8f;
     public float maxShakeSpeed = 35f;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private Vector3 startPosition;
     private Quaternion startRotation;
     private bool isTriggered;
@@ -17,6 +23,9 @@ public class FallingPlatform : MonoBehaviour
     private MeshCollider mainCollider;
     private BoxCollider triggerCollider;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         CacheStartTransform();
@@ -33,6 +42,9 @@ public class FallingPlatform : MonoBehaviour
         Activate();
     }
 
+    // --------------------
+    // Spusteni platformy
+    // --------------------
     public void Activate()
     {
         if (isTriggered)
@@ -43,6 +55,9 @@ public class FallingPlatform : MonoBehaviour
         StartCoroutine(FallRoutine());
     }
 
+    // --------------------
+    // Flow padu a resetu
+    // --------------------
     IEnumerator FallRoutine()
     {
         isTriggered = true;
@@ -71,6 +86,9 @@ public class FallingPlatform : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Shake pred zmizenim
+    // --------------------
     void UpdateShake(float timer)
     {
         float progress = 1f;
@@ -101,6 +119,9 @@ public class FallingPlatform : MonoBehaviour
         transform.rotation = startRotation;
     }
 
+    // --------------------
+    // Vypnuti/zapnuti platformy
+    // --------------------
     void SetVisualState(bool enabledState)
     {
         if (platformRenderer != null)
@@ -119,6 +140,9 @@ public class FallingPlatform : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Cache
+    // --------------------
     void CacheStartTransform()
     {
         startPosition = transform.position;

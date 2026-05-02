@@ -3,6 +3,9 @@ using UnityEngine.InputSystem;
 
 public class CombatScript : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni utoku
+    // --------------------
     [Header("Attack")]
     public float attackCooldown = 0.8f;
     public int attackDamage = 20;
@@ -11,6 +14,9 @@ public class CombatScript : MonoBehaviour
     [Header("Visual")]
     public GameObject traileffect;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private PlayerInput playerInput;
     private InputAction attackAction;
     private float lastAttackTime;
@@ -18,6 +24,9 @@ public class CombatScript : MonoBehaviour
     private bool attackActive;
     private bool hasRegisteredHitThisAttack;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
@@ -52,6 +61,7 @@ public class CombatScript : MonoBehaviour
 
     void Update()
     {
+        // Samotny zasah resi SwordHitbox. Tady jen spoustime animaci utoku.
         if (!CanReadAttackInput())
         {
             return;
@@ -70,6 +80,9 @@ public class CombatScript : MonoBehaviour
         Attack();
     }
 
+    // --------------------
+    // Animation Events
+    // --------------------
     public void StartAttackAnimation()
     {
         if (combatBlocked)
@@ -89,6 +102,9 @@ public class CombatScript : MonoBehaviour
         SetTrailActive(false);
     }
 
+    // --------------------
+    // API pro ostatni scripty
+    // --------------------
     public void SetCombatBlocked(bool blocked)
     {
         combatBlocked = blocked;
@@ -124,9 +140,11 @@ public class CombatScript : MonoBehaviour
     public void RegisterHit()
     {
         hasRegisteredHitThisAttack = true;
-        Debug.Log("hit");
     }
 
+    // --------------------
+    // Vstup a cooldown
+    // --------------------
     bool CanReadAttackInput()
     {
         if (Cursor.lockState != CursorLockMode.Locked)
@@ -165,6 +183,9 @@ public class CombatScript : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Vizualni efekt mece
+    // --------------------
     void SetTrailActive(bool activeState)
     {
         if (traileffect != null)

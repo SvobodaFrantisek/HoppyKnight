@@ -2,9 +2,15 @@ using UnityEngine;
 
 public class LogPusher : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni odstrceni
+    // --------------------
     [Header("Sila odstrceni od klady")]
     public float pushForce = 5f;
 
+    // --------------------
+    // Kontakt s hracem
+    // --------------------
     void OnTriggerStay(Collider other)
     {
         if (!other.CompareTag("Player"))
@@ -22,6 +28,9 @@ public class LogPusher : MonoBehaviour
         PushPlayer(characterController, other.transform.position);
     }
 
+    // --------------------
+    // Odstrceni hrace
+    // --------------------
     void PushPlayer(CharacterController characterController, Vector3 playerPosition)
     {
         Vector3 direction = playerPosition - transform.position;

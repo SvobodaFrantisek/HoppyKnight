@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 public class HUDmanager : MonoBehaviour
 {
+    // --------------------
+    // Zakladni HUD reference
+    // --------------------
     public TMP_Text coinText;
     public Slider healthBar;
     public TMP_Text gemText;
@@ -13,16 +16,22 @@ public class HUDmanager : MonoBehaviour
     public TMP_Text potionSlot2Text;
     public TMP_Text potionSlot3Text;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Start()
     {
         PotionInventory potionInventory = FindAnyObjectByType<PotionInventory>();
 
         if (potionInventory != null)
         {
-            UpdatePotionSlots(potionInventory.GetSlots(), potionInventory.GetSelectedSlotIndex());
+            UpdatePotionSlots(potionInventory.GetSlots());
         }
     }
 
+    // --------------------
+    // Zakladni hodnoty HUDu
+    // --------------------
     public void UpdateCoins(int coins)
     {
         if (coinText != null)
@@ -39,22 +48,42 @@ public class HUDmanager : MonoBehaviour
         }
     }
 
-    public void UpdateHealth(int health)
+    public void UpdateHealth(int health, int maxHealth)
     {
-        if (healthBar != null)
+        if (healthBar == null)
         {
-            healthBar.value = health;
+            return;
         }
+
+        if (maxHealth <= 0)
+        {
+            maxHealth = 1;
+        }
+
+        if (health < 0)
+        {
+            health = 0;
+        }
+
+        if (health > maxHealth)
+        {
+            health = maxHealth;
+        }
+
+        healthBar.maxValue = maxHealth;
+        healthBar.value = health;
     }
 
-    public void UpdatePotionSlots(PotionType[] slots, int selectedSlotIndex)
+    // --------------------
+    // Texty potion slotu
+    // --------------------
+    public void UpdatePotionSlots(PotionType[] slots)
     {
         if (slots == null)
         {
             return;
         }
 
-        // selectedSlotIndex si nechavame pro pripadne budouci zvyrazneni aktivniho slotu.
         UpdatePotionSlotText(potionSlot1Text, slots, 0, "1: ");
         UpdatePotionSlotText(potionSlot2Text, slots, 1, "2: ");
         UpdatePotionSlotText(potionSlot3Text, slots, 2, "3: ");

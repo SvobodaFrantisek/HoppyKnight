@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class ShopkeeperScript : MonoBehaviour
 {
+    // --------------------
+    // Napojeni z Inspectoru
+    // --------------------
     public GameObject shopUI;
     public GameManager gameManager;
     public PotionInventory potionInventory;
@@ -14,6 +17,9 @@ public class ShopkeeperScript : MonoBehaviour
 
     public bool playerInRange = false;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Start()
     {
         CacheReferences();
@@ -33,6 +39,9 @@ public class ShopkeeperScript : MonoBehaviour
         TryToggleShopFromInput();
     }
 
+    // --------------------
+    // Trigger zony shopu
+    // --------------------
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player"))
@@ -58,6 +67,9 @@ public class ShopkeeperScript : MonoBehaviour
         }
     }
 
+    // --------------------
+    // UI tlacitka shopu
+    // --------------------
     public void OpenShop()
     {
         if (shopUI == null)
@@ -93,6 +105,9 @@ public class ShopkeeperScript : MonoBehaviour
         TryBuyPotion(PotionType.Strength, strengthCost);
     }
 
+    // --------------------
+    // Nakup potionu
+    // --------------------
     bool TryBuyPotion(PotionType potionType, int cost)
     {
         CacheReferences();
@@ -104,7 +119,6 @@ public class ShopkeeperScript : MonoBehaviour
 
         if (!potionInventory.HasFreeSlot())
         {
-            Debug.Log("Inventar potionu je plny.");
             return false;
         }
 
@@ -122,6 +136,9 @@ public class ShopkeeperScript : MonoBehaviour
         return true;
     }
 
+    // --------------------
+    // Ovladani a reference
+    // --------------------
     void TryToggleShopFromInput()
     {
         if (!playerInRange)
@@ -165,6 +182,9 @@ public class ShopkeeperScript : MonoBehaviour
         return true;
     }
 
+    // --------------------
+    // Zobrazeni shopu
+    // --------------------
     void SetShopVisible(bool visibleState)
     {
         if (shopUI == null)

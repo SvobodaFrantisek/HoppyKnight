@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class Coin : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni pohybu
+    // --------------------
     [Header("Idle")]
     public float rotationSpeed = 100f;
     public float hoverSpeed = 2f;
@@ -15,6 +18,9 @@ public class Coin : MonoBehaviour
     private bool isFlyingToPlayer;
     private Transform playerTransform;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Start()
     {
         CacheGameManager();
@@ -47,6 +53,9 @@ public class Coin : MonoBehaviour
         StartFlyToPlayer(other.transform);
     }
 
+    // --------------------
+    // Idle animace mince
+    // --------------------
     void UpdateIdleMotion()
     {
         transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
@@ -55,6 +64,9 @@ public class Coin : MonoBehaviour
         transform.position = new Vector3(startPosition.x, newY, startPosition.z);
     }
 
+    // --------------------
+    // Let mince k hraci
+    // --------------------
     void UpdateFlyToPlayer()
     {
         if (playerTransform == null)
@@ -73,6 +85,9 @@ public class Coin : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Sebrani mince
+    // --------------------
     void StartFlyToPlayer(Transform target)
     {
         isFlyingToPlayer = true;
@@ -88,8 +103,6 @@ public class Coin : MonoBehaviour
 
     void CollectCoin()
     {
-        Debug.Log("Coin collected!");
-
         if (gameManager != null)
         {
             gameManager.AddCoin(1);
@@ -98,6 +111,9 @@ public class Coin : MonoBehaviour
         Destroy(gameObject);
     }
 
+    // --------------------
+    // Reference
+    // --------------------
     void CacheGameManager()
     {
         gameManager = FindAnyObjectByType<GameManager>();

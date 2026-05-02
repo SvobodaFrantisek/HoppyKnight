@@ -2,10 +2,19 @@ using UnityEngine;
 
 public class EnemyMeleeHitbox : MonoBehaviour
 {
+    // --------------------
+    // Napojeni na melee utok
+    // --------------------
     public EnemyMeleeAttack meleeAttack;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private PlayerHitbox currentPlayerHitbox;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         CacheMeleeAttack();
@@ -19,6 +28,9 @@ public class EnemyMeleeHitbox : MonoBehaviour
         currentPlayerHitbox = null;
     }
 
+    // --------------------
+    // Trigger zbrane enemaka
+    // --------------------
     void Update()
     {
         TryHitCurrentPlayer();
@@ -51,6 +63,9 @@ public class EnemyMeleeHitbox : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Zapocitani hitu
+    // --------------------
     void TryHitCurrentPlayer()
     {
         if (meleeAttack == null)
@@ -71,6 +86,9 @@ public class EnemyMeleeHitbox : MonoBehaviour
         meleeAttack.RegisterHit(currentPlayerHitbox);
     }
 
+    // --------------------
+    // Hledani PlayerHitboxu
+    // --------------------
     PlayerHitbox GetPlayerHitbox(Collider other)
     {
         if (!IsPlayerHitbox(other))
@@ -91,6 +109,9 @@ public class EnemyMeleeHitbox : MonoBehaviour
         return other.gameObject.layer == LayerMask.NameToLayer("PlayerHitbox");
     }
 
+    // --------------------
+    // Reference a validace
+    // --------------------
     void CacheMeleeAttack()
     {
         if (meleeAttack == null)

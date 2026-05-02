@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class MovingPlatform : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni z Inspectoru
+    // --------------------
     public Transform pointA;
     public Transform pointB;
     public float speed = 2f;
@@ -9,6 +12,9 @@ public class MovingPlatform : MonoBehaviour
     public bool startFromA = true;
     public Vector3 frameDelta;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private Vector3 pointAPosition;
     private Vector3 pointBPosition;
     private Vector3 currentTargetPosition;
@@ -16,6 +22,9 @@ public class MovingPlatform : MonoBehaviour
     private bool movingToPointB;
     private float waitTimer;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Start()
     {
         if (!HasRequiredPoints())
@@ -52,6 +61,9 @@ public class MovingPlatform : MonoBehaviour
         frameDelta = transform.position - previousPosition;
     }
 
+    // --------------------
+    // Napojeni hrace na platformu
+    // --------------------
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player"))
@@ -82,6 +94,9 @@ public class MovingPlatform : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Kontrola bodu
+    // --------------------
     bool HasRequiredPoints()
     {
         if (pointA == null)
@@ -97,6 +112,9 @@ public class MovingPlatform : MonoBehaviour
         return true;
     }
 
+    // --------------------
+    // Pohyb mezi body
+    // --------------------
     void CachePointPositions()
     {
         pointAPosition = pointA.position;

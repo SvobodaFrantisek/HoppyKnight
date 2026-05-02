@@ -4,6 +4,9 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class FPSController : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni pohybu
+    // --------------------
     [Header("Movement Settings")]
     public float moveSpeed = 6f;
     public float rotationSpeed = 10f;
@@ -19,6 +22,9 @@ public class FPSController : MonoBehaviour
     public float wallCheckDistance = 0.5f;
     public bool isClimbing = false;
 
+    // --------------------
+    // Dodge
+    // --------------------
     [Header("Dodge Settings")]
     public float dodgeDistance = 2.5f;
     public float dodgeDuration = 0.18f;
@@ -29,6 +35,9 @@ public class FPSController : MonoBehaviour
     public bool inputLocked = false;
     public bool movementLocked = false;
 
+    // --------------------
+    // Reference a stav behem hry
+    // --------------------
     private PlayerInput playerInput;
     private InputAction moveAction;
     private InputAction jumpAction;
@@ -49,6 +58,9 @@ public class FPSController : MonoBehaviour
     private bool wasClimbing = false;
     private bool isDodging;
 
+    // --------------------
+    // Vypocet rychlosti dodge
+    // --------------------
     private float DodgeSpeed
     {
         get
@@ -62,6 +74,9 @@ public class FPSController : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -130,6 +145,9 @@ public class FPSController : MonoBehaviour
         HandleAnimations();
     }
 
+    // --------------------
+    // API pro jine scripty
+    // --------------------
     public void SetInputLocked(bool locked)
     {
         inputLocked = locked;
@@ -181,6 +199,9 @@ public class FPSController : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Hlavni flow pohybu
+    // --------------------
     void HandleMovement()
     {
         Vector2 moveInput = ReadMoveInput();
@@ -206,6 +227,9 @@ public class FPSController : MonoBehaviour
         UpdateGroundedAnimationTimer();
     }
 
+    // --------------------
+    // Animator
+    // --------------------
     void HandleAnimations()
     {
         if (animator == null)
@@ -226,6 +250,9 @@ public class FPSController : MonoBehaviour
         animator.SetBool("IsClimbing", isClimbing);
     }
 
+    // --------------------
+    // Input
+    // --------------------
     Vector2 ReadMoveInput()
     {
         Vector2 moveInput = Vector2.zero;
@@ -243,6 +270,9 @@ public class FPSController : MonoBehaviour
         return moveInput;
     }
 
+    // --------------------
+    // Dodge cooldown a climb
+    // --------------------
     void UpdateDodgeCooldown()
     {
         if (dodgeCooldownTimer > 0f)
@@ -317,6 +347,9 @@ public class FPSController : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, targetWallRotation, rotationSpeed * Time.deltaTime);
     }
 
+    // --------------------
+    // Chuze, skok a dodge
+    // --------------------
     void HandleStandardMovement(Vector2 moveInput)
     {
         HandleGroundAndAirState();
@@ -334,6 +367,9 @@ public class FPSController : MonoBehaviour
         HandleCeilingCollision();
     }
 
+    // --------------------
+    // Grounded a skok
+    // --------------------
     void HandleGroundAndAirState()
     {
         if (cc.isGrounded)
@@ -381,6 +417,9 @@ public class FPSController : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Pohyb podle kamery
+    // --------------------
     Vector3 CalculateCameraRelativeMoveDirection(Vector2 moveInput)
     {
         Vector3 camForward = Camera.main.transform.forward;
@@ -493,6 +532,9 @@ public class FPSController : MonoBehaviour
         return moveSpeed;
     }
 
+    // --------------------
+    // CharacterController Move
+    // --------------------
     void UpdateAnimationMoveSpeed(Vector3 moveDirection, float currentSpeed)
     {
         if (moveDirection != Vector3.zero)
@@ -531,6 +573,9 @@ public class FPSController : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Grounded stav pro animace
+    // --------------------
     void UpdateGroundedAnimationTimer()
     {
         if (cc.isGrounded)

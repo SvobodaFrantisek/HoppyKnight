@@ -2,11 +2,17 @@ using UnityEngine;
 
 public class Respawn : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni respawnu
+    // --------------------
     public Transform respawnPoint;
     public float fallLimitY = -20f;
 
     private CharacterController cc;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -20,6 +26,9 @@ public class Respawn : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Verejne API pro checkpointy
+    // --------------------
     public void SetRespawnPoint(Transform newRespawnPoint)
     {
         respawnPoint = newRespawnPoint;
@@ -41,6 +50,9 @@ public class Respawn : MonoBehaviour
         SetCharacterControllerEnabled(true);
     }
 
+    // --------------------
+    // CharacterController helper
+    // --------------------
     void SetCharacterControllerEnabled(bool enabledState)
     {
         if (cc != null)

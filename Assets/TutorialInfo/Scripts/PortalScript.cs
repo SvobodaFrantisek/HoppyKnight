@@ -4,6 +4,9 @@ using UnityEngine.SceneManagement;
 
 public class PortalScript : MonoBehaviour
 {
+    // --------------------
+    // Napojeni z Inspectoru
+    // --------------------
     public GameManager gameManager;
     public string nextSceneName;
     public float portalDelay = 1.5f;
@@ -11,6 +14,9 @@ public class PortalScript : MonoBehaviour
 
     private bool isFinishing;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Start()
     {
         if (gameManager == null)
@@ -19,6 +25,9 @@ public class PortalScript : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Vstup do portalu
+    // --------------------
     void OnTriggerEnter(Collider other)
     {
         if (isFinishing)
@@ -33,13 +42,15 @@ public class PortalScript : MonoBehaviour
 
         if (!CanFinishLevel())
         {
-            Debug.Log("Musis sebrat vsechny gemy.");
             return;
         }
 
         StartCoroutine(FinishLevel(other.gameObject));
     }
 
+    // --------------------
+    // Dokonceni levelu
+    // --------------------
     IEnumerator FinishLevel(GameObject player)
     {
         isFinishing = true;
@@ -57,6 +68,9 @@ public class PortalScript : MonoBehaviour
         SceneManager.LoadScene(nextSceneName);
     }
 
+    // --------------------
+    // Podminky portalu
+    // --------------------
     bool CanFinishLevel()
     {
         if (gameManager == null)
@@ -67,6 +81,9 @@ public class PortalScript : MonoBehaviour
         return gameManager.gems >= gameManager.remainGems;
     }
 
+    // --------------------
+    // Vypnuti hrace a animace vyhry
+    // --------------------
     void DisablePlayerGameplay(GameObject player)
     {
         FPSController controller = player.GetComponent<FPSController>();

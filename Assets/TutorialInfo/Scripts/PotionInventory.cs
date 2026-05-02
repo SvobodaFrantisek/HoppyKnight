@@ -5,9 +5,15 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInput))]
 public class PotionInventory : MonoBehaviour
 {
+    // --------------------
+    // Sloty inventare
+    // --------------------
     [Header("Sloty")]
     public PotionType[] slots = new PotionType[3];
 
+    // --------------------
+    // Objekty v ruce
+    // --------------------
     [Header("Objekty v ruce")]
     public GameObject swordModel;
     public GameObject speedPotionModel;
@@ -16,10 +22,16 @@ public class PotionInventory : MonoBehaviour
     public GameObject jumpBoostPotionModel;
     public GameObject doubleJumpPotionModel;
 
+    // --------------------
+    // Piti potionu
+    // --------------------
     [Header("Piti")]
     public float drinkDuration = 1.2f;
     public string drinkTriggerName = "Drink";
 
+    // --------------------
+    // Efekty potionu
+    // --------------------
     [Header("Efekty potionu")]
     public float speedPotionDuration = 5f;
     public float speedPotionMoveBonus = 4f;
@@ -30,6 +42,9 @@ public class PotionInventory : MonoBehaviour
     public float doubleJumpDuration = 8f;
     public int healAmount = 25;
 
+    // --------------------
+    // Reference
+    // --------------------
     private PlayerInput playerInput;
     private InputAction attackAction;
     private HUDmanager hudManager;
@@ -38,19 +53,31 @@ public class PotionInventory : MonoBehaviour
     private CombatScript combatScript;
     private Animator animator;
 
+    // --------------------
+    // Stav inventare
+    // --------------------
     private int selectedSlotIndex = -1;
     private bool isDrinking;
 
+    // --------------------
+    // Zakladni staty pred potion efekty
+    // --------------------
     private float baseMoveSpeed;
     private float baseJumpSpeed;
     private float baseAttackCooldown;
     private bool baseHasDoubleJump;
 
+    // --------------------
+    // Bezici efekty
+    // --------------------
     private Coroutine speedCoroutine;
     private Coroutine jumpCoroutine;
     private Coroutine strengthCoroutine;
     private Coroutine doubleJumpCoroutine;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         CacheReferences();
@@ -106,6 +133,9 @@ public class PotionInventory : MonoBehaviour
         HandlePotionUseInput();
     }
 
+    // --------------------
+    // Verejne API inventare
+    // --------------------
     public bool HasFreeSlot()
     {
         return FindFirstFreeSlotIndex() >= 0;
@@ -135,11 +165,6 @@ public class PotionInventory : MonoBehaviour
         return slots;
     }
 
-    public int GetSelectedSlotIndex()
-    {
-        return selectedSlotIndex;
-    }
-
     public bool IsPotionSelected()
     {
         if (selectedSlotIndex < 0)
@@ -160,6 +185,9 @@ public class PotionInventory : MonoBehaviour
         return true;
     }
 
+    // --------------------
+    // Vstup z klavesnice
+    // --------------------
     void HandleSlotSelectionInput(Keyboard keyboard)
     {
         if (keyboard.digit1Key.wasPressedThisFrame)
@@ -209,6 +237,9 @@ public class PotionInventory : MonoBehaviour
         StartCoroutine(DrinkSelectedPotion());
     }
 
+    // --------------------
+    // Prepinani itemu v ruce
+    // --------------------
     void SelectSlot(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= slots.Length)
@@ -245,6 +276,9 @@ public class PotionInventory : MonoBehaviour
         RefreshHud();
     }
 
+    // --------------------
+    // Piti potionu
+    // --------------------
     IEnumerator DrinkSelectedPotion()
     {
         if (!IsPotionSelected())
@@ -298,6 +332,9 @@ public class PotionInventory : MonoBehaviour
         isDrinking = false;
     }
 
+    // --------------------
+    // Efekty potionu
+    // --------------------
     void ApplyPotionEffect(PotionType potionType)
     {
         if (potionType == PotionType.Speed)
@@ -430,6 +467,9 @@ public class PotionInventory : MonoBehaviour
         doubleJumpCoroutine = null;
     }
 
+    // --------------------
+    // Vizual v ruce
+    // --------------------
     void ShowHeldItem(PotionType potionType)
     {
         SetAllHeldItemsInactive();
@@ -488,6 +528,9 @@ public class PotionInventory : MonoBehaviour
         }
     }
 
+    // --------------------
+    // HUD a pomocne metody
+    // --------------------
     void RefreshHud()
     {
         if (hudManager == null)
@@ -497,7 +540,7 @@ public class PotionInventory : MonoBehaviour
 
         if (hudManager != null)
         {
-            hudManager.UpdatePotionSlots(slots, selectedSlotIndex);
+            hudManager.UpdatePotionSlots(slots);
         }
     }
 

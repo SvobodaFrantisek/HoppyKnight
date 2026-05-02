@@ -2,10 +2,16 @@ using UnityEngine;
 
 public class PlayerHitbox : MonoBehaviour
 {
+    // --------------------
+    // Napojeni z Inspectoru
+    // --------------------
     public GameManager gameManager;
     public FPSController fpsController;
     public bool ignoreDamageWhileDodging = true;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         CacheReferences();
@@ -18,11 +24,13 @@ public class PlayerHitbox : MonoBehaviour
         ValidateHitboxSettings();
     }
 
+    // --------------------
+    // Damage do hrace
+    // --------------------
     public void TakeDamage(int damageAmount)
     {
         if (ShouldIgnoreDamage())
         {
-            Debug.Log("Player dodged damage.");
             return;
         }
 
@@ -47,6 +55,9 @@ public class PlayerHitbox : MonoBehaviour
         return fpsController.IsDodging();
     }
 
+    // --------------------
+    // Automaticke dohledani referenci
+    // --------------------
     void CacheReferences()
     {
         if (gameManager == null)
@@ -60,6 +71,9 @@ public class PlayerHitbox : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Kontrola nastaveni hitboxu
+    // --------------------
     void ValidateHitboxSettings()
     {
         Collider hitboxCollider = GetComponent<Collider>();

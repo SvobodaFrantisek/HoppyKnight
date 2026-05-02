@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni z Inspectoru
+    // --------------------
     public HUDmanager hudManager;
     public int coins = 0;
     public int gems = 0;
@@ -9,6 +12,9 @@ public class GameManager : MonoBehaviour
     public int health = 100;
     public int maxHealth = 100;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Start()
     {
         CacheHudManager();
@@ -19,34 +25,36 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Meny a sbirani
+    // --------------------
     public void AddCoin(int amount)
     {
         coins += amount;
         RefreshCoinsHud();
-        Debug.Log("Coins: " + coins);
     }
 
     public void AddGem(int amount)
     {
         gems += amount;
         RefreshGemsHud();
-        Debug.Log("Gems: " + gems);
     }
 
     public bool TrySpendCoins(int cost)
     {
         if (coins < cost)
         {
-            Debug.Log("Nemas dostatek minci na koupi tohoto itemu.");
             return false;
         }
 
         coins -= cost;
         RefreshCoinsHud();
-        Debug.Log("Item koupen, zustatek minci: " + coins);
         return true;
     }
 
+    // --------------------
+    // Zdravi hrace
+    // --------------------
     public void Heal(int amount)
     {
         health += amount;
@@ -61,6 +69,11 @@ public class GameManager : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        if (health <= 0)
+        {
+            return;
+        }
+
         if (amount <= 0)
         {
             return;
@@ -74,14 +87,11 @@ public class GameManager : MonoBehaviour
         }
 
         RefreshHealthHud();
-        Debug.Log("Player HP: " + health);
-
-        if (health <= 0)
-        {
-            Debug.Log("Player is dead.");
-        }
     }
 
+    // --------------------
+    // Stare napojeni z UI / sceny
+    // --------------------
     // Legacy wrapper ponechany kvuli stavajicim referencim.
     public void addGem(int amount)
     {
@@ -105,6 +115,9 @@ public class GameManager : MonoBehaviour
         return coins;
     }
 
+    // --------------------
+    // HUD helper metody
+    // --------------------
     void CacheHudManager()
     {
         if (hudManager != null)
@@ -148,7 +161,7 @@ public class GameManager : MonoBehaviour
     {
         if (hudManager != null)
         {
-            hudManager.UpdateHealth(health);
+            hudManager.UpdateHealth(health, maxHealth);
             return;
         }
 

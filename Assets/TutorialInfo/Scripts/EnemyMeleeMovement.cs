@@ -4,29 +4,47 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyMeleeMovement : MonoBehaviour
 {
+    // --------------------
+    // Cil
+    // --------------------
     [Header("Target")]
     public Transform player;
 
+    // --------------------
+    // Patrolovani
+    // --------------------
     [Header("Patrol")]
     public Transform[] patrolPoints;
     public float patrolPointReachDistance = 0.5f;
     public float waitAtPatrolPoint = 1f;
 
+    // --------------------
+    // Detekce hrace
+    // --------------------
     [Header("Detection")]
     public float detectionRange = 8f;
     public float losePlayerRange = 12f;
 
+    // --------------------
+    // Pohyb v boji
+    // --------------------
     [Header("Combat Movement")]
     public float stopDistance = 1.5f;
 
     [Header("Animation")]
     public Animator animator;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private NavMeshAgent agent;
     private int currentPatrolIndex;
     private float waitTimer;
     private bool chasingPlayer;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -60,6 +78,9 @@ public class EnemyMeleeMovement : MonoBehaviour
         UpdateAnimation();
     }
 
+    // --------------------
+    // Prepinani patrol / chase
+    // --------------------
     void UpdateState()
     {
         if (player == null)
@@ -84,6 +105,9 @@ public class EnemyMeleeMovement : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Patrolovani
+    // --------------------
     void HandlePatrol()
     {
         if (patrolPoints == null || patrolPoints.Length == 0)
@@ -109,6 +133,9 @@ public class EnemyMeleeMovement : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Chase hrace
+    // --------------------
     void HandleChase()
     {
         if (player == null)
@@ -121,6 +148,9 @@ public class EnemyMeleeMovement : MonoBehaviour
         agent.SetDestination(player.position);
     }
 
+    // --------------------
+    // Patrol pointy
+    // --------------------
     void MoveToNextPatrolPoint()
     {
         currentPatrolIndex++;
@@ -151,6 +181,9 @@ public class EnemyMeleeMovement : MonoBehaviour
         agent.SetDestination(patrolPoint.position);
     }
 
+    // --------------------
+    // Reference a animace
+    // --------------------
     void FindPlayerIfNeeded()
     {
         if (player != null)

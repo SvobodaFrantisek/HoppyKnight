@@ -3,16 +3,25 @@ using UnityEngine.UI;
 
 public class EnemyThrowerAttack : MonoBehaviour
 {
+    // --------------------
+    // Cil a dosah
+    // --------------------
     [Header("Target")]
     public Transform player;
     public float attackRange = 12f;
 
+    // --------------------
+    // Projectile a marker
+    // --------------------
     [Header("Projectile")]
     public GameObject projectilePrefab;
     public Transform firePoint;
     public float projectileSpeed = 8f;
     public GameObject targetMarkerPrefab;
 
+    // --------------------
+    // Casovani utoku
+    // --------------------
     [Header("Attack")]
     public int damage = 15;
     public float attackCooldown = 3f;
@@ -27,12 +36,18 @@ public class EnemyThrowerAttack : MonoBehaviour
     public string aimingParameterName = "IsAiming";
     public string throwReleaseTriggerName = "ThrowRelease";
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private float cooldownTimer;
     private float aimTimer;
     private bool preparingShot;
     private Vector3 lockedTargetPosition;
     private GameObject currentMarker;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         if (animator == null)
@@ -57,6 +72,9 @@ public class EnemyThrowerAttack : MonoBehaviour
         RefreshAttackSlider();
     }
 
+    // --------------------
+    // Cooldown a mireni
+    // --------------------
     void UpdateCooldown()
     {
         if (cooldownTimer <= 0f)
@@ -120,6 +138,9 @@ public class EnemyThrowerAttack : MonoBehaviour
         SetAimingAnimation(true);
     }
 
+    // --------------------
+    // Animator
+    // --------------------
     void PlayThrowStartAnimation()
     {
         if (animator != null)
@@ -153,6 +174,9 @@ public class EnemyThrowerAttack : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Vystrel
+    // --------------------
     void ShootAtLockedPosition()
     {
         if (projectilePrefab == null)
@@ -191,6 +215,9 @@ public class EnemyThrowerAttack : MonoBehaviour
         currentMarker = null;
     }
 
+    // --------------------
+    // Marker mista dopadu
+    // --------------------
     void ShowTargetMarker()
     {
         if (targetMarkerPrefab == null)
@@ -218,6 +245,9 @@ public class EnemyThrowerAttack : MonoBehaviour
         return distanceToPlayer <= attackRange;
     }
 
+    // --------------------
+    // UI cooldownu
+    // --------------------
     void RefreshAttackSlider()
     {
         if (attackProgressSlider == null)
@@ -251,6 +281,9 @@ public class EnemyThrowerAttack : MonoBehaviour
         return progress;
     }
 
+    // --------------------
+    // Hledani hrace
+    // --------------------
     void FindPlayerIfNeeded()
     {
         if (player != null)

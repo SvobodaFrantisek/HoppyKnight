@@ -4,14 +4,23 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class AnimalMovement : MonoBehaviour
 {
+    // --------------------
+    // Cil
+    // --------------------
     [Header("Target")]
     public Transform player;
 
+    // --------------------
+    // Patrolovani
+    // --------------------
     [Header("Patrol")]
     public Transform[] patrolPoints;
     public float patrolPointReachDistance = 0.5f;
     public float waitAtPatrolPoint = 1f;
 
+    // --------------------
+    // Utek od hrace
+    // --------------------
     [Header("Fear")]
     public float fearRange = 5f;
     public float safeRange = 9f;
@@ -20,11 +29,17 @@ public class AnimalMovement : MonoBehaviour
     [Header("Animation")]
     public Animator animator;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private NavMeshAgent agent;
     private int currentPatrolIndex;
     private float waitTimer;
     private bool fleeing;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -57,6 +72,9 @@ public class AnimalMovement : MonoBehaviour
         UpdateAnimation();
     }
 
+    // --------------------
+    // Prepinani patrol / utek
+    // --------------------
     void UpdateState()
     {
         if (player == null)
@@ -80,6 +98,9 @@ public class AnimalMovement : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Patrolovani
+    // --------------------
     void HandlePatrol()
     {
         if (patrolPoints == null || patrolPoints.Length == 0)
@@ -103,6 +124,9 @@ public class AnimalMovement : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Utek od hrace
+    // --------------------
     void HandleFlee()
     {
         if (player == null)
@@ -129,6 +153,9 @@ public class AnimalMovement : MonoBehaviour
         }
     }
 
+    // --------------------
+    // Patrol pointy
+    // --------------------
     void MoveToNextPatrolPoint()
     {
         currentPatrolIndex++;
@@ -159,6 +186,9 @@ public class AnimalMovement : MonoBehaviour
         agent.SetDestination(patrolPoint.position);
     }
 
+    // --------------------
+    // Reference a animace
+    // --------------------
     void FindPlayerIfNeeded()
     {
         if (player != null)

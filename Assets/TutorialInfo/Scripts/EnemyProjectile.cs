@@ -2,16 +2,25 @@ using UnityEngine;
 
 public class EnemyProjectile : MonoBehaviour
 {
+    // --------------------
+    // Nastaveni projectilu
+    // --------------------
     public int damage = 15;
     public float speed = 8f;
     public float lifeTime = 5f;
     public float hitDistance = 0.2f;
 
+    // --------------------
+    // Stav behem hry
+    // --------------------
     private Vector3 targetPosition;
     private GameObject targetMarker;
     private bool hasTarget;
     private bool hasHit;
 
+    // --------------------
+    // Unity zivotni cyklus
+    // --------------------
     void Awake()
     {
         ValidateHitboxSettings();
@@ -40,6 +49,9 @@ public class EnemyProjectile : MonoBehaviour
         MoveToTarget();
     }
 
+    // --------------------
+    // Zasah hrace
+    // --------------------
     void OnTriggerEnter(Collider other)
     {
         if (hasHit)
@@ -59,6 +71,9 @@ public class EnemyProjectile : MonoBehaviour
         DestroyProjectile();
     }
 
+    // --------------------
+    // Nastaveni po spawnuti
+    // --------------------
     public void Setup(Vector3 newTargetPosition, int newDamage, float newSpeed)
     {
         targetPosition = newTargetPosition;
@@ -73,6 +88,9 @@ public class EnemyProjectile : MonoBehaviour
         targetMarker = newTargetMarker;
     }
 
+    // --------------------
+    // Let na zamcenou pozici
+    // --------------------
     void MoveToTarget()
     {
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
@@ -96,6 +114,9 @@ public class EnemyProjectile : MonoBehaviour
         Destroy(gameObject);
     }
 
+    // --------------------
+    // Hledani PlayerHitboxu
+    // --------------------
     PlayerHitbox GetPlayerHitbox(Collider other)
     {
         if (!IsPlayerHitbox(other))
@@ -116,6 +137,9 @@ public class EnemyProjectile : MonoBehaviour
         return other.gameObject.layer == LayerMask.NameToLayer("PlayerHitbox");
     }
 
+    // --------------------
+    // Kontrola nastaveni hitboxu
+    // --------------------
     void ValidateHitboxSettings()
     {
         Collider hitboxCollider = GetComponent<Collider>();
