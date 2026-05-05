@@ -1,4 +1,6 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UI;
 
 public class EnemyHealth : MonoBehaviour
@@ -11,6 +13,7 @@ public class EnemyHealth : MonoBehaviour
     public Slider healthSlider;
     public GameObject objectToDisableOnDeath;
     public bool destroyOnDeath = false;
+    public float disableAfterDeathDelay = 2f;
 
     [Header("Animation")]
     public Animator animator;
@@ -18,6 +21,7 @@ public class EnemyHealth : MonoBehaviour
     public string dieTriggerName = "Die";
 
     private bool isDead;
+    private bool deathRoutineStarted;
 
     // --------------------
     // Unity zivotni cyklus
@@ -89,8 +93,54 @@ public class EnemyHealth : MonoBehaviour
     void Die()
     {
         isDead = true;
+
+        if (deathRoutineStarted)
+        {
+            return;
+        }
+
+        deathRoutineStarted = true;
+        StartCoroutine(DeathRoutine());
+    }
+
+    IEnumerator DeathRoutine()
+    {
+        StopEnemyBehaviour();
         PlayDieAnimation();
 
+        yield return new WaitForSeconds(disableAfterDeathDelay);
+
+        DisableDeadObject();
+    }
+
+    void StopEnemyBehaviour()
+    {
+        NavMeshAgent navMeshAgent = GetComponent<NavMeshAgent>();
+
+        if (navMeshAgent != null)
+        {
+            navMeshAgent.isStopped = true;
+            navMeshAgent.ResetPath();
+            navMeshAgent.enabled = false;
+        }
+
+        DisableBehaviour(GetComponent<EnemyMeleeMovement>());
+        DisableBehaviour(GetComponentInChildren<EnemyMeleeAttack>());
+        DisableBehaviour(GetComponentInChildren<EnemyMeleeHitbox>());
+        DisableBehaviour(GetComponent<EnemyThrowerMovement>());
+        DisableBehaviour(GetComponent<EnemyThrowerAttack>());
+    }
+
+    void DisableBehaviour(MonoBehaviour behaviour)
+    {
+        if (behaviour != null)
+        {
+            behaviour.enabled = false;
+        }
+    }
+
+    void DisableDeadObject()
+    {
         if (objectToDisableOnDeath != null)
         {
             objectToDisableOnDeath.SetActive(false);

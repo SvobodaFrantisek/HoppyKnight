@@ -33,6 +33,7 @@ public class EnemyMeleeMovement : MonoBehaviour
 
     [Header("Animation")]
     public Animator animator;
+    public string speedParameterName = "Speed";
 
     // --------------------
     // Stav behem hry
@@ -206,6 +207,6 @@ public class EnemyMeleeMovement : MonoBehaviour
             return;
         }
 
-        animator.SetFloat("Speed", agent.velocity.magnitude);
+        animator.SetFloat(speedParameterName, agent.velocity.magnitude);
     }
 }

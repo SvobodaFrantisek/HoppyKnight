@@ -16,7 +16,6 @@ public class EnemyMeleeAttack : MonoBehaviour
     [Header("Attack")]
     public int damage = 15;
     public float attackCooldown = 2f;
-    public float attackWindow = 0.35f;
     public string attackTriggerName = "Attack";
 
     [Header("UI")]
@@ -29,8 +28,8 @@ public class EnemyMeleeAttack : MonoBehaviour
     // Stav behem hry
     // --------------------
     private float cooldownTimer;
-    private float attackWindowTimer;
-    private bool attackActive;
+    private bool attackInProgress;
+    private bool hitWindowActive;
     private bool hasHitThisAttack;
 
     // --------------------
@@ -55,17 +54,47 @@ public class EnemyMeleeAttack : MonoBehaviour
     {
         FindPlayerIfNeeded();
         UpdateCooldown();
-        UpdateAttackWindow();
         TryStartAttack();
         RefreshAttackSlider();
     }
 
     // --------------------
-    // API pro hitbox mece/nepritele
+    // Animation Events
+    // --------------------
+    public void StartHitWindow()
+    {
+        if (!attackInProgress)
+        {
+            return;
+        }
+
+        hitWindowActive = true;
+        hasHitThisAttack = false;
+    }
+
+    public void EndHitWindow()
+    {
+        hitWindowActive = false;
+    }
+
+    public void EndAttack()
+    {
+        attackInProgress = false;
+        hitWindowActive = false;
+        hasHitThisAttack = false;
+    }
+
+    // --------------------
+    // API pro hitbox utoku
     // --------------------
     public bool CanHitNow()
     {
-        if (!attackActive)
+        if (!attackInProgress)
+        {
+            return false;
+        }
+
+        if (!hitWindowActive)
         {
             return false;
         }
@@ -95,7 +124,7 @@ public class EnemyMeleeAttack : MonoBehaviour
     }
 
     // --------------------
-    // Cooldown a utocne okno
+    // Cooldown
     // --------------------
     void UpdateCooldown()
     {
@@ -112,27 +141,12 @@ public class EnemyMeleeAttack : MonoBehaviour
         }
     }
 
-    void UpdateAttackWindow()
-    {
-        if (!attackActive)
-        {
-            return;
-        }
-
-        attackWindowTimer -= Time.deltaTime;
-
-        if (attackWindowTimer <= 0f)
-        {
-            attackActive = false;
-        }
-    }
-
     // --------------------
     // Spusteni utoku
     // --------------------
     void TryStartAttack()
     {
-        if (attackActive)
+        if (attackInProgress)
         {
             return;
         }
@@ -153,8 +167,8 @@ public class EnemyMeleeAttack : MonoBehaviour
     void StartAttack()
     {
         cooldownTimer = attackCooldown;
-        attackWindowTimer = attackWindow;
-        attackActive = true;
+        attackInProgress = true;
+        hitWindowActive = false;
         hasHitThisAttack = false;
 
         if (animator != null)
