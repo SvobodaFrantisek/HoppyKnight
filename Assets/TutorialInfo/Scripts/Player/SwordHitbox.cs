@@ -12,6 +12,7 @@ public class SwordHitbox : MonoBehaviour
     // --------------------
     private bool isInsideEnemyHitbox;
     private EnemyHealth currentEnemyHealth;
+    private DragonBossController currentDragonBoss;
 
     // --------------------
     // Unity zivotni cyklus
@@ -28,6 +29,7 @@ public class SwordHitbox : MonoBehaviour
         ValidateHitboxSettings();
         isInsideEnemyHitbox = false;
         currentEnemyHealth = null;
+        currentDragonBoss = null;
     }
 
     // --------------------
@@ -42,28 +44,46 @@ public class SwordHitbox : MonoBehaviour
     {
         EnemyHealth enemyHealth = GetEnemyHealth(other);
 
-        if (enemyHealth == null)
+        if (enemyHealth != null)
         {
+            isInsideEnemyHitbox = true;
+            currentEnemyHealth = enemyHealth;
+            currentDragonBoss = null;
             return;
         }
 
-        isInsideEnemyHitbox = true;
-        currentEnemyHealth = enemyHealth;
+        DragonBossController dragonBoss = GetDragonBoss(other);
+
+        if (dragonBoss != null)
+        {
+            isInsideEnemyHitbox = true;
+            currentEnemyHealth = null;
+            currentDragonBoss = dragonBoss;
+        }
     }
 
     void OnTriggerExit(Collider other)
     {
         EnemyHealth enemyHealth = GetEnemyHealth(other);
 
-        if (enemyHealth == null)
+        if (enemyHealth != null)
         {
+            if (enemyHealth == currentEnemyHealth)
+            {
+                ClearCurrentTarget();
+            }
+
             return;
         }
 
-        if (enemyHealth == currentEnemyHealth)
+        DragonBossController dragonBoss = GetDragonBoss(other);
+
+        if (dragonBoss != null)
         {
-            isInsideEnemyHitbox = false;
-            currentEnemyHealth = null;
+            if (dragonBoss == currentDragonBoss)
+            {
+                ClearCurrentTarget();
+            }
         }
     }
 
@@ -87,13 +107,18 @@ public class SwordHitbox : MonoBehaviour
             return;
         }
 
-        if (currentEnemyHealth == null)
+        if (currentEnemyHealth != null)
         {
+            currentEnemyHealth.TakeDamage(combatScript.attackDamage);
+            combatScript.RegisterHit();
             return;
         }
 
-        currentEnemyHealth.TakeDamage(combatScript.attackDamage);
-        combatScript.RegisterHit();
+        if (currentDragonBoss != null)
+        {
+            currentDragonBoss.TakeDamage(combatScript.attackDamage);
+            combatScript.RegisterHit();
+        }
     }
 
     // --------------------
@@ -109,6 +134,16 @@ public class SwordHitbox : MonoBehaviour
         return other.GetComponentInParent<EnemyHealth>();
     }
 
+    DragonBossController GetDragonBoss(Collider other)
+    {
+        if (!IsEnemyHitbox(other))
+        {
+            return null;
+        }
+
+        return other.GetComponentInParent<DragonBossController>();
+    }
+
     bool IsEnemyHitbox(Collider other)
     {
         if (other == null)
@@ -117,6 +152,13 @@ public class SwordHitbox : MonoBehaviour
         }
 
         return other.gameObject.layer == LayerMask.NameToLayer("EnemyHitbox");
+    }
+
+    void ClearCurrentTarget()
+    {
+        isInsideEnemyHitbox = false;
+        currentEnemyHealth = null;
+        currentDragonBoss = null;
     }
 
     // --------------------
