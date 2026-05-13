@@ -49,7 +49,18 @@ public class DragonBossController : MonoBehaviour
     // --------------------
     [Header("Attack")]
     public int basicAttackDamage = 25;
+    public int heavyAttackDamage = 35;
+    public int projectileAttackDamage = 20;
     public float attackCooldown = 2.5f;
+    public bool useHeavyAttack = false;
+    public bool useProjectileAttack = false;
+    public float projectileAttackRange = 12f;
+
+    [Header("Projectile Attack")]
+    public GameObject projectilePrefab;
+    public Transform firePoint;
+    public float projectileSpeed = 8f;
+    public float projectileTargetHeight = 1f;
 
     // --------------------
     // Parametry v Animatoru
@@ -58,6 +69,8 @@ public class DragonBossController : MonoBehaviour
     public string speedParameterName = "Speed";
     public string wakeUpTriggerName = "WakeUp";
     public string attackTriggerName = "Attack";
+    public string heavyAttackTriggerName = "HeavyAttack";
+    public string projectileAttackTriggerName = "ProjectileAttack";
     public string getHitTriggerName = "GetHit";
     public string dieTriggerName = "Die";
 
@@ -66,7 +79,9 @@ public class DragonBossController : MonoBehaviour
     // --------------------
     private BossState currentState = BossState.Sleeping;
     private float cooldownTimer;
+    private int meleeAttackCount;
     private int currentAttackDamage;
+    private Vector3 lockedProjectileTargetPosition;
     private bool hitWindowActive;
     private bool hasHitThisAttack;
 
@@ -181,7 +196,21 @@ public class DragonBossController : MonoBehaviour
 
             if (cooldownTimer <= 0f)
             {
-                StartBasicAttack();
+                StartCloseAttack();
+                return;
+            }
+
+            return;
+        }
+
+        if (CanStartProjectileAttack(distanceToPlayer))
+        {
+            StopMovement();
+            SetAnimatorSpeed(0f);
+
+            if (cooldownTimer <= 0f)
+            {
+                StartProjectileAttack();
                 return;
             }
 
@@ -241,18 +270,71 @@ public class DragonBossController : MonoBehaviour
     // --------------------
     // Utok a Animation Eventy
     // --------------------
+    void StartCloseAttack()
+    {
+        if (!useHeavyAttack)
+        {
+            StartBasicAttack();
+            return;
+        }
+
+        meleeAttackCount++;
+
+        if (meleeAttackCount >= 3)
+        {
+            meleeAttackCount = 0;
+            StartHeavyAttack();
+            return;
+        }
+
+        StartBasicAttack();
+    }
+
     void StartBasicAttack()
+    {
+        StartMeleeAttack(basicAttackDamage, attackTriggerName);
+    }
+
+    void StartHeavyAttack()
+    {
+        StartMeleeAttack(heavyAttackDamage, heavyAttackTriggerName);
+    }
+
+    void StartMeleeAttack(int damage, string triggerName)
     {
         currentState = BossState.Attacking;
         cooldownTimer = attackCooldown;
-        currentAttackDamage = basicAttackDamage;
+        currentAttackDamage = damage;
         hitWindowActive = false;
         hasHitThisAttack = false;
 
         StopMovement();
         SetAnimatorSpeed(0f);
         FacePlayer();
-        SetAnimatorTrigger(attackTriggerName);
+        SetAnimatorTrigger(triggerName);
+    }
+
+    void StartProjectileAttack()
+    {
+        currentState = BossState.Attacking;
+        cooldownTimer = attackCooldown;
+        currentAttackDamage = projectileAttackDamage;
+        hitWindowActive = false;
+        hasHitThisAttack = false;
+
+        if (player != null)
+        {
+            lockedProjectileTargetPosition = player.position + Vector3.up * projectileTargetHeight;
+        }
+        else
+        {
+            lockedProjectileTargetPosition = transform.position + transform.forward * projectileAttackRange;
+        }
+
+        StopMovement();
+        SetAnimatorSpeed(0f);
+        FacePlayer();
+        SetAnimatorTrigger(projectileAttackTriggerName);
     }
 
     public void StartHitWindow()
@@ -263,10 +345,28 @@ public class DragonBossController : MonoBehaviour
         }
 
         hitWindowActive = true;
+        currentAttackDamage = basicAttackDamage;
         hasHitThisAttack = false;
     }
 
     public void EndHitWindow()
+    {
+        hitWindowActive = false;
+    }
+
+    public void StartHeavyHitWindow()
+    {
+        if (currentState != BossState.Attacking)
+        {
+            return;
+        }
+
+        currentAttackDamage = heavyAttackDamage;
+        hitWindowActive = true;
+        hasHitThisAttack = false;
+    }
+
+    public void EndHeavyHitWindow()
     {
         hitWindowActive = false;
     }
@@ -282,6 +382,51 @@ public class DragonBossController : MonoBehaviour
         hasHitThisAttack = false;
         currentState = BossState.Chasing;
         SetAnimatorSpeed(0f);
+    }
+
+    public void ShootProjectile()
+    {
+        if (currentState != BossState.Attacking)
+        {
+            return;
+        }
+
+        if (projectilePrefab == null)
+        {
+            Debug.LogWarning(gameObject.name + " nema nastaveny projectilePrefab.");
+            return;
+        }
+
+        EnemyProjectile projectilePrefabScript = projectilePrefab.GetComponent<EnemyProjectile>();
+
+        if (projectilePrefabScript == null)
+        {
+            Debug.LogWarning(projectilePrefab.name + " nema EnemyProjectile script.");
+            return;
+        }
+
+        Vector3 spawnPosition = transform.position + Vector3.up * 2f;
+
+        if (firePoint != null)
+        {
+            spawnPosition = firePoint.position;
+        }
+
+        Quaternion spawnRotation = Quaternion.identity;
+        Vector3 directionToTarget = lockedProjectileTargetPosition - spawnPosition;
+
+        if (directionToTarget != Vector3.zero)
+        {
+            spawnRotation = Quaternion.LookRotation(directionToTarget);
+        }
+
+        GameObject projectileObject = Instantiate(projectilePrefab, spawnPosition, spawnRotation);
+        EnemyProjectile projectile = projectileObject.GetComponent<EnemyProjectile>();
+
+        if (projectile != null)
+        {
+            projectile.Setup(lockedProjectileTargetPosition, projectileAttackDamage, projectileSpeed);
+        }
     }
 
     public void TryHitPlayer(PlayerHitbox playerHitbox)
@@ -308,6 +453,26 @@ public class DragonBossController : MonoBehaviour
         }
 
         if (hasHitThisAttack)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool CanStartProjectileAttack(float distanceToPlayer)
+    {
+        if (!useProjectileAttack)
+        {
+            return false;
+        }
+
+        if (distanceToPlayer <= attackRange)
+        {
+            return false;
+        }
+
+        if (distanceToPlayer > projectileAttackRange)
         {
             return false;
         }
