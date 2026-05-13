@@ -1628,7 +1628,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonBossHitbox
   bossController: {fileID: 0}
-  hitboxType: 0
 --- !u!1 &289583077 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 193358, guid: 86be09d8335b8fe4793de59175aeb6a0, type: 3}
@@ -1981,7 +1980,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonBossHitbox
   bossController: {fileID: 0}
-  hitboxType: 0
 --- !u!65 &333373278
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3533,7 +3531,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonBossHitbox
   bossController: {fileID: 0}
-  hitboxType: 0
 --- !u!65 &654313176
 BoxCollider:
   m_ObjectHideFlags: 0
