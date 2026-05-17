@@ -50,11 +50,28 @@ public class DragonBossController : MonoBehaviour
     [Header("Attack")]
     public int basicAttackDamage = 25;
     public int heavyAttackDamage = 35;
+    public int flameAttackDamage = 15;
     public int projectileAttackDamage = 20;
     public float attackCooldown = 2.5f;
+    public float heavyAttackCooldown = 6f;
     public bool useHeavyAttack = false;
+    public bool useHeavyAttackRange = false;
+    public float heavyAttackMinRange = 4.5f;
+    public float heavyAttackMaxRange = 8f;
+    public bool useFlameAttack = false;
+    public float flameAttackMinRange = 8f;
     public bool useProjectileAttack = false;
+    public float flameAttackRange = 7f;
     public float projectileAttackRange = 12f;
+
+    [Header("Attack Hitboxes")]
+    public GameObject basicHitbox;
+    public GameObject heavyHitbox;
+
+    [Header("Flame Attack")]
+    public string flameAttackTriggerName = "FlameAttack";
+    public GameObject flamePrefab;
+    public Transform flameSpawnPoint;
 
     [Header("Projectile Attack")]
     public GameObject projectilePrefab;
@@ -79,11 +96,14 @@ public class DragonBossController : MonoBehaviour
     // --------------------
     private BossState currentState = BossState.Sleeping;
     private float cooldownTimer;
+    private float heavyCooldownTimer;
     private int meleeAttackCount;
     private int currentAttackDamage;
     private Vector3 lockedProjectileTargetPosition;
+    private GameObject activeFlameObject;
     private bool hitWindowActive;
     private bool hasHitThisAttack;
+    private bool mustMoveCloserAfterFlame;
 
     // --------------------
     // Unity zivotni cyklus
@@ -101,6 +121,7 @@ public class DragonBossController : MonoBehaviour
         SetupNavMeshAgent();
         RefreshHealthSlider();
         SetAnimatorSpeed(0f);
+        DisableAllHitboxes();
     }
 
     void Update()
@@ -189,6 +210,11 @@ public class DragonBossController : MonoBehaviour
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
+        if (distanceToPlayer < flameAttackMinRange)
+        {
+            mustMoveCloserAfterFlame = false;
+        }
+
         if (distanceToPlayer <= attackRange)
         {
             StopMovement();
@@ -203,17 +229,27 @@ public class DragonBossController : MonoBehaviour
             return;
         }
 
-        if (CanStartProjectileAttack(distanceToPlayer))
+        if (cooldownTimer <= 0f && CanStartHeavyAttackFromRange(distanceToPlayer))
         {
             StopMovement();
             SetAnimatorSpeed(0f);
+            StartHeavyAttack();
+            return;
+        }
 
-            if (cooldownTimer <= 0f)
-            {
-                StartProjectileAttack();
-                return;
-            }
+        if (cooldownTimer <= 0f && CanStartFlameAttack(distanceToPlayer))
+        {
+            StopMovement();
+            SetAnimatorSpeed(0f);
+            StartFlameAttack();
+            return;
+        }
 
+        if (cooldownTimer <= 0f && CanStartProjectileAttack(distanceToPlayer))
+        {
+            StopMovement();
+            SetAnimatorSpeed(0f);
+            StartProjectileAttack();
             return;
         }
 
@@ -278,6 +314,12 @@ public class DragonBossController : MonoBehaviour
             return;
         }
 
+        if (useHeavyAttackRange)
+        {
+            StartBasicAttack();
+            return;
+        }
+
         meleeAttackCount++;
 
         if (meleeAttackCount >= 3)
@@ -292,11 +334,13 @@ public class DragonBossController : MonoBehaviour
 
     void StartBasicAttack()
     {
+        mustMoveCloserAfterFlame = false;
         StartMeleeAttack(basicAttackDamage, attackTriggerName);
     }
 
     void StartHeavyAttack()
     {
+        heavyCooldownTimer = heavyAttackCooldown;
         StartMeleeAttack(heavyAttackDamage, heavyAttackTriggerName);
     }
 
@@ -307,6 +351,7 @@ public class DragonBossController : MonoBehaviour
         currentAttackDamage = damage;
         hitWindowActive = false;
         hasHitThisAttack = false;
+        DisableAllHitboxes();
 
         StopMovement();
         SetAnimatorSpeed(0f);
@@ -321,6 +366,7 @@ public class DragonBossController : MonoBehaviour
         currentAttackDamage = projectileAttackDamage;
         hitWindowActive = false;
         hasHitThisAttack = false;
+        DisableAllHitboxes();
 
         if (player != null)
         {
@@ -337,6 +383,22 @@ public class DragonBossController : MonoBehaviour
         SetAnimatorTrigger(projectileAttackTriggerName);
     }
 
+    void StartFlameAttack()
+    {
+        mustMoveCloserAfterFlame = true;
+        currentState = BossState.Attacking;
+        cooldownTimer = attackCooldown;
+        currentAttackDamage = flameAttackDamage;
+        hitWindowActive = false;
+        hasHitThisAttack = false;
+        DisableAllHitboxes();
+
+        StopMovement();
+        SetAnimatorSpeed(0f);
+        FacePlayer();
+        SetAnimatorTrigger(flameAttackTriggerName);
+    }
+
     public void StartHitWindow()
     {
         if (currentState != BossState.Attacking)
@@ -347,11 +409,13 @@ public class DragonBossController : MonoBehaviour
         hitWindowActive = true;
         currentAttackDamage = basicAttackDamage;
         hasHitThisAttack = false;
+        SetHitboxState(basicHitbox, true);
     }
 
     public void EndHitWindow()
     {
         hitWindowActive = false;
+        SetHitboxState(basicHitbox, false);
     }
 
     public void StartHeavyHitWindow()
@@ -364,11 +428,32 @@ public class DragonBossController : MonoBehaviour
         currentAttackDamage = heavyAttackDamage;
         hitWindowActive = true;
         hasHitThisAttack = false;
+        SetHitboxState(heavyHitbox, true);
     }
 
     public void EndHeavyHitWindow()
     {
         hitWindowActive = false;
+        SetHitboxState(heavyHitbox, false);
+    }
+
+    public void StartFlameHitWindow()
+    {
+        if (currentState != BossState.Attacking)
+        {
+            return;
+        }
+
+        currentAttackDamage = flameAttackDamage;
+        hitWindowActive = true;
+        hasHitThisAttack = false;
+        SpawnFlamePrefab();
+    }
+
+    public void EndFlameHitWindow()
+    {
+        hitWindowActive = false;
+        DestroyFlamePrefab();
     }
 
     public void EndAttack()
@@ -380,6 +465,7 @@ public class DragonBossController : MonoBehaviour
 
         hitWindowActive = false;
         hasHitThisAttack = false;
+        DisableAllHitboxes();
         currentState = BossState.Chasing;
         SetAnimatorSpeed(0f);
     }
@@ -460,6 +546,61 @@ public class DragonBossController : MonoBehaviour
         return true;
     }
 
+    bool CanStartHeavyAttackFromRange(float distanceToPlayer)
+    {
+        if (!useHeavyAttack)
+        {
+            return false;
+        }
+
+        if (!useHeavyAttackRange)
+        {
+            return false;
+        }
+
+        if (heavyCooldownTimer > 0f)
+        {
+            return false;
+        }
+
+        if (distanceToPlayer < heavyAttackMinRange)
+        {
+            return false;
+        }
+
+        if (distanceToPlayer > heavyAttackMaxRange)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool CanStartFlameAttack(float distanceToPlayer)
+    {
+        if (!useFlameAttack)
+        {
+            return false;
+        }
+
+        if (mustMoveCloserAfterFlame)
+        {
+            return false;
+        }
+
+        if (distanceToPlayer < flameAttackMinRange)
+        {
+            return false;
+        }
+
+        if (distanceToPlayer > flameAttackRange)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     bool CanStartProjectileAttack(float distanceToPlayer)
     {
         if (!useProjectileAttack)
@@ -526,6 +667,7 @@ public class DragonBossController : MonoBehaviour
         currentState = BossState.Dead;
         hitWindowActive = false;
         hasHitThisAttack = false;
+        DisableAllHitboxes();
 
         StopMovement();
         SetAnimatorSpeed(0f);
@@ -547,6 +689,8 @@ public class DragonBossController : MonoBehaviour
 
     void DisableBossHitboxes()
     {
+        DisableAllHitboxes();
+
         DragonBossHitbox[] bossHitboxes = GetComponentsInChildren<DragonBossHitbox>();
 
         int i = 0;
@@ -554,6 +698,74 @@ public class DragonBossController : MonoBehaviour
         while (i < bossHitboxes.Length)
         {
             bossHitboxes[i].enabled = false;
+            i++;
+        }
+    }
+
+    void DisableAllHitboxes()
+    {
+        SetHitboxState(basicHitbox, false);
+        SetHitboxState(heavyHitbox, false);
+        DestroyFlamePrefab();
+    }
+
+    void SetHitboxState(GameObject hitboxObject, bool isActive)
+    {
+        if (hitboxObject == null)
+        {
+            return;
+        }
+
+        hitboxObject.SetActive(isActive);
+    }
+
+    void SpawnFlamePrefab()
+    {
+        if (flamePrefab == null)
+        {
+            return;
+        }
+
+        DestroyFlamePrefab();
+
+        if (flameSpawnPoint != null)
+        {
+            activeFlameObject = Instantiate(flamePrefab, flameSpawnPoint.position, flameSpawnPoint.rotation);
+            activeFlameObject.transform.SetParent(flameSpawnPoint, true);
+            ConnectFlameHitboxesToBoss(activeFlameObject);
+            return;
+        }
+
+        Vector3 spawnPosition = transform.position;
+        Quaternion spawnRotation = transform.rotation;
+        activeFlameObject = Instantiate(flamePrefab, spawnPosition, spawnRotation);
+        ConnectFlameHitboxesToBoss(activeFlameObject);
+    }
+
+    void DestroyFlamePrefab()
+    {
+        if (activeFlameObject == null)
+        {
+            return;
+        }
+
+        Destroy(activeFlameObject);
+        activeFlameObject = null;
+    }
+
+    void ConnectFlameHitboxesToBoss(GameObject flameObject)
+    {
+        if (flameObject == null)
+        {
+            return;
+        }
+
+        DragonBossHitbox[] flameHitboxes = flameObject.GetComponentsInChildren<DragonBossHitbox>();
+        int i = 0;
+
+        while (i < flameHitboxes.Length)
+        {
+            flameHitboxes[i].bossController = this;
             i++;
         }
     }
@@ -604,16 +816,24 @@ public class DragonBossController : MonoBehaviour
 
     void UpdateCooldown()
     {
-        if (cooldownTimer <= 0f)
+        if (cooldownTimer > 0f)
         {
-            return;
+            cooldownTimer -= Time.deltaTime;
+
+            if (cooldownTimer < 0f)
+            {
+                cooldownTimer = 0f;
+            }
         }
 
-        cooldownTimer -= Time.deltaTime;
-
-        if (cooldownTimer < 0f)
+        if (heavyCooldownTimer > 0f)
         {
-            cooldownTimer = 0f;
+            heavyCooldownTimer -= Time.deltaTime;
+
+            if (heavyCooldownTimer < 0f)
+            {
+                heavyCooldownTimer = 0f;
+            }
         }
     }
 
