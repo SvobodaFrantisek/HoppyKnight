@@ -2992,7 +2992,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e42a6ef6cbe4fbb9f2c9b68b58cc5a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameSceneName: SampleScene
+  gameSceneName: Level_01
   tutorialSceneName: Test
   playButton: {fileID: 283438273}
   tutorialButton: {fileID: 698302276}

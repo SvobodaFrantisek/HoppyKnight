@@ -13,7 +13,7 @@ public class MainMenuManager : MonoBehaviour
     // Sceny
     // --------------------
     [Header("Scenes")]
-    public string gameSceneName = "SampleScene";
+    public string gameSceneName = "Level_01";
     public string tutorialSceneName = "Test";
 
     // --------------------
