@@ -10,6 +10,9 @@ public class EnemyProjectile : MonoBehaviour
     public float lifeTime = 5f;
     public float hitDistance = 0.2f;
 
+    [Header("Burn")]
+    public bool startBurnOnHit;
+
     // --------------------
     // Stav behem hry
     // --------------------
@@ -67,7 +70,14 @@ public class EnemyProjectile : MonoBehaviour
         }
 
         hasHit = true;
-        playerHitbox.TakeDamage(damage);
+
+        bool damageApplied = playerHitbox.TakeDamage(damage);
+
+        if (startBurnOnHit && damageApplied)
+        {
+            playerHitbox.StartBurn();
+        }
+
         DestroyProjectile();
     }
 
@@ -76,9 +86,15 @@ public class EnemyProjectile : MonoBehaviour
     // --------------------
     public void Setup(Vector3 newTargetPosition, int newDamage, float newSpeed)
     {
+        Setup(newTargetPosition, newDamage, newSpeed, startBurnOnHit);
+    }
+
+    public void Setup(Vector3 newTargetPosition, int newDamage, float newSpeed, bool newStartBurnOnHit)
+    {
         targetPosition = newTargetPosition;
         damage = newDamage;
         speed = newSpeed;
+        startBurnOnHit = newStartBurnOnHit;
         hasTarget = true;
         hasHit = false;
     }

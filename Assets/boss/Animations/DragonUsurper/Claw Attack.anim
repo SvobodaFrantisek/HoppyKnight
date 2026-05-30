@@ -192990,7 +192990,7 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 2.5
+  - time: 2.0666666
     functionName: EndHeavyHitWindow
     data: 
     objectReferenceParameter: {fileID: 0}

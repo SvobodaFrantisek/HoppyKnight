@@ -22,6 +22,7 @@ public class DragonBossController : MonoBehaviour
     public Animator animator;
     public NavMeshAgent navMeshAgent;
     public Slider healthSlider;
+    public Slider attackProgressSlider;
     public GameObject objectToDisableOnDeath;
 
     // --------------------
@@ -79,6 +80,10 @@ public class DragonBossController : MonoBehaviour
     public float projectileSpeed = 8f;
     public float projectileTargetHeight = 1f;
 
+    [Header("Burn")]
+    public bool projectileStartsBurn = false;
+    public bool flameStartsBurn = false;
+
     // --------------------
     // Parametry v Animatoru
     // --------------------
@@ -104,6 +109,7 @@ public class DragonBossController : MonoBehaviour
     private bool hitWindowActive;
     private bool hasHitThisAttack;
     private bool mustMoveCloserAfterFlame;
+    private bool currentAttackStartsBurn;
 
     // --------------------
     // Unity zivotni cyklus
@@ -120,6 +126,7 @@ public class DragonBossController : MonoBehaviour
 
         SetupNavMeshAgent();
         RefreshHealthSlider();
+        RefreshAttackSlider();
         SetAnimatorSpeed(0f);
         DisableAllHitboxes();
     }
@@ -128,6 +135,7 @@ public class DragonBossController : MonoBehaviour
     {
         FindPlayerIfNeeded();
         UpdateCooldown();
+        RefreshAttackSlider();
 
         if (currentState == BossState.Dead)
         {
@@ -349,6 +357,7 @@ public class DragonBossController : MonoBehaviour
         currentState = BossState.Attacking;
         cooldownTimer = attackCooldown;
         currentAttackDamage = damage;
+        currentAttackStartsBurn = false;
         hitWindowActive = false;
         hasHitThisAttack = false;
         DisableAllHitboxes();
@@ -364,6 +373,7 @@ public class DragonBossController : MonoBehaviour
         currentState = BossState.Attacking;
         cooldownTimer = attackCooldown;
         currentAttackDamage = projectileAttackDamage;
+        currentAttackStartsBurn = false;
         hitWindowActive = false;
         hasHitThisAttack = false;
         DisableAllHitboxes();
@@ -389,6 +399,7 @@ public class DragonBossController : MonoBehaviour
         currentState = BossState.Attacking;
         cooldownTimer = attackCooldown;
         currentAttackDamage = flameAttackDamage;
+        currentAttackStartsBurn = flameStartsBurn;
         hitWindowActive = false;
         hasHitThisAttack = false;
         DisableAllHitboxes();
@@ -408,6 +419,7 @@ public class DragonBossController : MonoBehaviour
 
         hitWindowActive = true;
         currentAttackDamage = basicAttackDamage;
+        currentAttackStartsBurn = false;
         hasHitThisAttack = false;
         SetHitboxState(basicHitbox, true);
     }
@@ -426,6 +438,7 @@ public class DragonBossController : MonoBehaviour
         }
 
         currentAttackDamage = heavyAttackDamage;
+        currentAttackStartsBurn = false;
         hitWindowActive = true;
         hasHitThisAttack = false;
         SetHitboxState(heavyHitbox, true);
@@ -445,6 +458,7 @@ public class DragonBossController : MonoBehaviour
         }
 
         currentAttackDamage = flameAttackDamage;
+        currentAttackStartsBurn = flameStartsBurn;
         hitWindowActive = true;
         hasHitThisAttack = false;
         SpawnFlamePrefab();
@@ -465,6 +479,7 @@ public class DragonBossController : MonoBehaviour
 
         hitWindowActive = false;
         hasHitThisAttack = false;
+        currentAttackStartsBurn = false;
         DisableAllHitboxes();
         currentState = BossState.Chasing;
         SetAnimatorSpeed(0f);
@@ -511,7 +526,7 @@ public class DragonBossController : MonoBehaviour
 
         if (projectile != null)
         {
-            projectile.Setup(lockedProjectileTargetPosition, projectileAttackDamage, projectileSpeed);
+            projectile.Setup(lockedProjectileTargetPosition, projectileAttackDamage, projectileSpeed, projectileStartsBurn);
         }
     }
 
@@ -527,7 +542,13 @@ public class DragonBossController : MonoBehaviour
             return;
         }
 
-        playerHitbox.TakeDamage(currentAttackDamage);
+        bool damageApplied = playerHitbox.TakeDamage(currentAttackDamage);
+
+        if (currentAttackStartsBurn && damageApplied)
+        {
+            playerHitbox.StartBurn();
+        }
+
         hasHitThisAttack = true;
     }
 
@@ -672,6 +693,7 @@ public class DragonBossController : MonoBehaviour
         StopMovement();
         SetAnimatorSpeed(0f);
         DisableBossHitboxes();
+        DisableBossBars();
         SetAnimatorTrigger(dieTriggerName);
 
         StartCoroutine(DisableAfterDeath());
@@ -846,6 +868,90 @@ public class DragonBossController : MonoBehaviour
 
         healthSlider.maxValue = maxHealth;
         healthSlider.value = health;
+    }
+
+    void RefreshAttackSlider()
+    {
+        if (attackProgressSlider == null)
+        {
+            return;
+        }
+
+        attackProgressSlider.maxValue = 1f;
+        attackProgressSlider.value = GetAttackProgress();
+    }
+
+    float GetAttackProgress()
+    {
+        if (attackCooldown <= 0f)
+        {
+            return 1f;
+        }
+
+        float progress = 1f - cooldownTimer / attackCooldown;
+
+        if (progress < 0f)
+        {
+            progress = 0f;
+        }
+
+        if (progress > 1f)
+        {
+            progress = 1f;
+        }
+
+        return progress;
+    }
+
+    void DisableBossBars()
+    {
+        DisableBarFromSlider(healthSlider);
+        DisableBarFromSlider(attackProgressSlider);
+
+        Transform barsTransform = FindChildByName(transform, "Boss Bars");
+
+        if (barsTransform != null)
+        {
+            barsTransform.gameObject.SetActive(false);
+        }
+    }
+
+    void DisableBarFromSlider(Slider slider)
+    {
+        if (slider == null)
+        {
+            return;
+        }
+
+        Canvas sliderCanvas = slider.GetComponentInParent<Canvas>(true);
+
+        if (sliderCanvas != null)
+        {
+            sliderCanvas.gameObject.SetActive(false);
+            return;
+        }
+
+        slider.gameObject.SetActive(false);
+    }
+
+    Transform FindChildByName(Transform parent, string childName)
+    {
+        if (parent == null)
+        {
+            return null;
+        }
+
+        Transform[] childTransforms = parent.GetComponentsInChildren<Transform>(true);
+
+        for (int i = 0; i < childTransforms.Length; i++)
+        {
+            if (childTransforms[i].name == childName)
+            {
+                return childTransforms[i];
+            }
+        }
+
+        return null;
     }
 
     void SetAnimatorSpeed(float speedValue)

@@ -14,6 +14,7 @@ public class EnemyHealth : MonoBehaviour
     public GameObject objectToDisableOnDeath;
     public bool destroyOnDeath = false;
     public float disableAfterDeathDelay = 2f;
+    public float destroyAfterDeathDelay = 2f;
 
     [Header("Animation")]
     public Animator animator;
@@ -106,11 +107,27 @@ public class EnemyHealth : MonoBehaviour
     IEnumerator DeathRoutine()
     {
         StopEnemyBehaviour();
+        DisableBarsOnDeath();
         PlayDieAnimation();
 
-        yield return new WaitForSeconds(disableAfterDeathDelay);
+        yield return new WaitForSeconds(GetDeathDelay());
 
         DisableDeadObject();
+    }
+
+    float GetDeathDelay()
+    {
+        if (objectToDisableOnDeath != null)
+        {
+            return disableAfterDeathDelay;
+        }
+
+        if (destroyOnDeath)
+        {
+            return destroyAfterDeathDelay;
+        }
+
+        return disableAfterDeathDelay;
     }
 
     void StopEnemyBehaviour()
@@ -129,6 +146,7 @@ public class EnemyHealth : MonoBehaviour
         DisableBehaviour(GetComponentInChildren<EnemyMeleeHitbox>());
         DisableBehaviour(GetComponent<EnemyThrowerMovement>());
         DisableBehaviour(GetComponent<EnemyThrowerAttack>());
+        DisableBehaviour(GetComponent<AnimalMovement>());
     }
 
     void DisableBehaviour(MonoBehaviour behaviour)
@@ -153,12 +171,62 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
+    void DisableBarsOnDeath()
+    {
+        DisableBarFromSlider(healthSlider);
+
+        Transform barsTransform = FindChildByName(transform, "Enemy Bars");
+
+        if (barsTransform != null)
+        {
+            barsTransform.gameObject.SetActive(false);
+        }
+    }
+
+    void DisableBarFromSlider(Slider slider)
+    {
+        if (slider == null)
+        {
+            return;
+        }
+
+        Canvas sliderCanvas = slider.GetComponentInParent<Canvas>(true);
+
+        if (sliderCanvas != null)
+        {
+            sliderCanvas.gameObject.SetActive(false);
+            return;
+        }
+
+        slider.gameObject.SetActive(false);
+    }
+
+    Transform FindChildByName(Transform parent, string childName)
+    {
+        if (parent == null)
+        {
+            return null;
+        }
+
+        Transform[] childTransforms = parent.GetComponentsInChildren<Transform>(true);
+
+        for (int i = 0; i < childTransforms.Length; i++)
+        {
+            if (childTransforms[i].name == childName)
+            {
+                return childTransforms[i];
+            }
+        }
+
+        return null;
+    }
+
     // --------------------
     // Animator
     // --------------------
     void PlayGetHitAnimation()
     {
-        if (animator != null)
+        if (animator != null && !string.IsNullOrEmpty(getHitTriggerName))
         {
             animator.ResetTrigger(getHitTriggerName);
             animator.SetTrigger(getHitTriggerName);
@@ -167,7 +235,7 @@ public class EnemyHealth : MonoBehaviour
 
     void PlayDieAnimation()
     {
-        if (animator != null)
+        if (animator != null && !string.IsNullOrEmpty(dieTriggerName))
         {
             animator.ResetTrigger(dieTriggerName);
             animator.SetTrigger(dieTriggerName);

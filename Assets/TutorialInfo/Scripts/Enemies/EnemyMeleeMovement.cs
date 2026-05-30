@@ -17,6 +17,9 @@ public class EnemyMeleeMovement : MonoBehaviour
     public Transform[] patrolPoints;
     public float patrolPointReachDistance = 0.5f;
     public float waitAtPatrolPoint = 1f;
+    public float randomPatrolRadius = 8f;
+    public int randomPatrolSearchAttempts = 10;
+    public float navMeshSnapDistance = 3f;
 
     // --------------------
     // Detekce hrace
@@ -42,6 +45,7 @@ public class EnemyMeleeMovement : MonoBehaviour
     private int currentPatrolIndex;
     private float waitTimer;
     private bool chasingPlayer;
+    private Vector3 randomPatrolCenter;
 
     // --------------------
     // Unity zivotni cyklus
@@ -59,12 +63,24 @@ public class EnemyMeleeMovement : MonoBehaviour
     void Start()
     {
         FindPlayerIfNeeded();
+        randomPatrolCenter = transform.position;
         agent.stoppingDistance = 0f;
+
+        if (!EnsureAgentIsOnNavMesh())
+        {
+            return;
+        }
+
         GoToCurrentPatrolPoint();
     }
 
     void Update()
     {
+        if (!EnsureAgentIsOnNavMesh())
+        {
+            return;
+        }
+
         UpdateState();
 
         if (chasingPlayer)
@@ -111,9 +127,9 @@ public class EnemyMeleeMovement : MonoBehaviour
     // --------------------
     void HandlePatrol()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0)
+        if (!HasPatrolPoints())
         {
-            agent.isStopped = true;
+            HandleRandomPatrol();
             return;
         }
 
@@ -131,6 +147,26 @@ public class EnemyMeleeMovement : MonoBehaviour
         if (!agent.pathPending && agent.remainingDistance <= patrolPointReachDistance)
         {
             MoveToNextPatrolPoint();
+        }
+    }
+
+    void HandleRandomPatrol()
+    {
+        agent.stoppingDistance = 0f;
+
+        if (waitTimer > 0f)
+        {
+            waitTimer -= Time.deltaTime;
+            agent.isStopped = true;
+            return;
+        }
+
+        agent.isStopped = false;
+
+        if (!agent.hasPath || (!agent.pathPending && agent.remainingDistance <= patrolPointReachDistance))
+        {
+            waitTimer = waitAtPatrolPoint;
+            GoToRandomPatrolPoint();
         }
     }
 
@@ -154,6 +190,13 @@ public class EnemyMeleeMovement : MonoBehaviour
     // --------------------
     void MoveToNextPatrolPoint()
     {
+        if (!HasPatrolPoints())
+        {
+            waitTimer = waitAtPatrolPoint;
+            GoToRandomPatrolPoint();
+            return;
+        }
+
         currentPatrolIndex++;
 
         if (currentPatrolIndex >= patrolPoints.Length)
@@ -167,8 +210,9 @@ public class EnemyMeleeMovement : MonoBehaviour
 
     void GoToCurrentPatrolPoint()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0)
+        if (!HasPatrolPoints())
         {
+            GoToRandomPatrolPoint();
             return;
         }
 
@@ -180,6 +224,71 @@ public class EnemyMeleeMovement : MonoBehaviour
         }
 
         agent.SetDestination(patrolPoint.position);
+    }
+
+    void GoToRandomPatrolPoint()
+    {
+        int attempt = 0;
+
+        while (attempt < randomPatrolSearchAttempts)
+        {
+            Vector2 randomCircle = Random.insideUnitCircle * randomPatrolRadius;
+            Vector3 randomPosition = randomPatrolCenter + new Vector3(randomCircle.x, 0f, randomCircle.y);
+
+            NavMeshHit navMeshHit;
+
+            if (NavMesh.SamplePosition(randomPosition, out navMeshHit, randomPatrolRadius, NavMesh.AllAreas))
+            {
+                agent.SetDestination(navMeshHit.position);
+                return;
+            }
+
+            attempt++;
+        }
+
+        agent.isStopped = true;
+    }
+
+    bool HasPatrolPoints()
+    {
+        if (patrolPoints == null)
+        {
+            return false;
+        }
+
+        foreach (Transform patrolPoint in patrolPoints)
+        {
+            if (patrolPoint != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool EnsureAgentIsOnNavMesh()
+    {
+        if (agent == null || !agent.enabled)
+        {
+            return false;
+        }
+
+        if (agent.isOnNavMesh)
+        {
+            return true;
+        }
+
+        NavMeshHit navMeshHit;
+
+        if (NavMesh.SamplePosition(transform.position, out navMeshHit, navMeshSnapDistance, NavMesh.AllAreas))
+        {
+            agent.Warp(navMeshHit.position);
+            randomPatrolCenter = navMeshHit.position;
+            return agent.isOnNavMesh;
+        }
+
+        return false;
     }
 
     // --------------------
@@ -202,7 +311,7 @@ public class EnemyMeleeMovement : MonoBehaviour
 
     void UpdateAnimation()
     {
-        if (animator == null)
+        if (animator == null || agent == null || !agent.enabled || !agent.isOnNavMesh)
         {
             return;
         }

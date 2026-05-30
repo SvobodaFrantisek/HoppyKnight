@@ -17,6 +17,8 @@ public class AnimalMovement : MonoBehaviour
     public Transform[] patrolPoints;
     public float patrolPointReachDistance = 0.5f;
     public float waitAtPatrolPoint = 1f;
+    public float randomPatrolRadius = 8f;
+    public int randomPatrolSearchAttempts = 10;
 
     // --------------------
     // Utek od hrace
@@ -26,8 +28,16 @@ public class AnimalMovement : MonoBehaviour
     public float safeRange = 9f;
     public float fleeDistance = 6f;
 
+    [Header("Movement Speed")]
+    public float walkSpeed = 1.5f;
+    public float runSpeed = 4f;
+
     [Header("Animation")]
     public Animator animator;
+    public string speedParameterName = "Speed";
+    public string idleParameterName = "IsIdle";
+    public string walkingParameterName = "IsWalking";
+    public string runningParameterName = "IsRunning";
 
     // --------------------
     // Stav behem hry
@@ -36,6 +46,7 @@ public class AnimalMovement : MonoBehaviour
     private int currentPatrolIndex;
     private float waitTimer;
     private bool fleeing;
+    private Vector3 randomPatrolCenter;
 
     // --------------------
     // Unity zivotni cyklus
@@ -53,6 +64,7 @@ public class AnimalMovement : MonoBehaviour
     void Start()
     {
         FindPlayerIfNeeded();
+        randomPatrolCenter = transform.position;
         GoToCurrentPatrolPoint();
     }
 
@@ -103,9 +115,9 @@ public class AnimalMovement : MonoBehaviour
     // --------------------
     void HandlePatrol()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0)
+        if (!HasPatrolPoints())
         {
-            agent.isStopped = true;
+            HandleRandomPatrol();
             return;
         }
 
@@ -116,11 +128,31 @@ public class AnimalMovement : MonoBehaviour
             return;
         }
 
+        agent.speed = walkSpeed;
         agent.isStopped = false;
 
         if (!agent.pathPending && agent.remainingDistance <= patrolPointReachDistance)
         {
             MoveToNextPatrolPoint();
+        }
+    }
+
+    void HandleRandomPatrol()
+    {
+        if (waitTimer > 0f)
+        {
+            waitTimer -= Time.deltaTime;
+            agent.isStopped = true;
+            return;
+        }
+
+        agent.speed = walkSpeed;
+        agent.isStopped = false;
+
+        if (!agent.hasPath || (!agent.pathPending && agent.remainingDistance <= patrolPointReachDistance))
+        {
+            waitTimer = waitAtPatrolPoint;
+            GoToRandomPatrolPoint();
         }
     }
 
@@ -148,6 +180,7 @@ public class AnimalMovement : MonoBehaviour
 
         if (NavMesh.SamplePosition(targetPosition, out navMeshHit, fleeDistance, NavMesh.AllAreas))
         {
+            agent.speed = runSpeed;
             agent.isStopped = false;
             agent.SetDestination(navMeshHit.position);
         }
@@ -158,6 +191,13 @@ public class AnimalMovement : MonoBehaviour
     // --------------------
     void MoveToNextPatrolPoint()
     {
+        if (!HasPatrolPoints())
+        {
+            waitTimer = waitAtPatrolPoint;
+            GoToRandomPatrolPoint();
+            return;
+        }
+
         currentPatrolIndex++;
 
         if (currentPatrolIndex >= patrolPoints.Length)
@@ -171,8 +211,9 @@ public class AnimalMovement : MonoBehaviour
 
     void GoToCurrentPatrolPoint()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0)
+        if (!HasPatrolPoints())
         {
+            GoToRandomPatrolPoint();
             return;
         }
 
@@ -184,6 +225,34 @@ public class AnimalMovement : MonoBehaviour
         }
 
         agent.SetDestination(patrolPoint.position);
+    }
+
+    void GoToRandomPatrolPoint()
+    {
+        int attempt = 0;
+
+        while (attempt < randomPatrolSearchAttempts)
+        {
+            Vector2 randomCircle = Random.insideUnitCircle * randomPatrolRadius;
+            Vector3 randomPosition = randomPatrolCenter + new Vector3(randomCircle.x, 0f, randomCircle.y);
+
+            NavMeshHit navMeshHit;
+
+            if (NavMesh.SamplePosition(randomPosition, out navMeshHit, randomPatrolRadius, NavMesh.AllAreas))
+            {
+                agent.SetDestination(navMeshHit.position);
+                return;
+            }
+
+            attempt++;
+        }
+
+        agent.isStopped = true;
+    }
+
+    bool HasPatrolPoints()
+    {
+        return patrolPoints != null && patrolPoints.Length > 0;
     }
 
     // --------------------
@@ -211,6 +280,35 @@ public class AnimalMovement : MonoBehaviour
             return;
         }
 
-        animator.SetFloat("Speed", agent.velocity.magnitude);
+        float currentSpeed = agent.velocity.magnitude;
+        bool isMoving = currentSpeed > 0.1f;
+        bool isRunning = fleeing && isMoving;
+        bool isWalking = !fleeing && isMoving;
+        bool isIdle = !isMoving;
+
+        SetAnimatorFloat(speedParameterName, currentSpeed);
+        SetAnimatorBool(idleParameterName, isIdle);
+        SetAnimatorBool(walkingParameterName, isWalking);
+        SetAnimatorBool(runningParameterName, isRunning);
+    }
+
+    void SetAnimatorFloat(string parameterName, float value)
+    {
+        if (string.IsNullOrEmpty(parameterName))
+        {
+            return;
+        }
+
+        animator.SetFloat(parameterName, value);
+    }
+
+    void SetAnimatorBool(string parameterName, bool value)
+    {
+        if (string.IsNullOrEmpty(parameterName))
+        {
+            return;
+        }
+
+        animator.SetBool(parameterName, value);
     }
 }
