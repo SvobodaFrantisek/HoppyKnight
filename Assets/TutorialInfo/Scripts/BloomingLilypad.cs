@@ -78,11 +78,6 @@ public class BloomingLilypad : MonoBehaviour
         Debug.LogWarning(gameObject.name + " nema prirazeny BloomingLilypadManager.");
     }
 
-    public bool IsCounted()
-    {
-        return counted;
-    }
-
     public void SetManager(BloomingLilypadManager newManager)
     {
         manager = newManager;

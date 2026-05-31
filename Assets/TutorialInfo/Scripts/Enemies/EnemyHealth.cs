@@ -11,6 +11,7 @@ public class EnemyHealth : MonoBehaviour
     public int maxHealth = 100;
     public int health = 100;
     public Slider healthSlider;
+    public bool isAnimal = false;
     public GameObject objectToDisableOnDeath;
     public bool destroyOnDeath = false;
     public float disableAfterDeathDelay = 2f;

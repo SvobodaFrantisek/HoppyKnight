@@ -220,11 +220,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyThrowerMovement
   player: {fileID: 0}
-  patrolPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   patrolPointReachDistance: 0.5
   waitAtPatrolPoint: 1
   randomPatrolRadius: 8

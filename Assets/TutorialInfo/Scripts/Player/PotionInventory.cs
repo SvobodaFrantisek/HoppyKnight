@@ -38,7 +38,7 @@ public class PotionInventory : MonoBehaviour
     public float jumpBoostDuration = 5f;
     public float jumpBoostValue = 4f;
     public float strengthPotionDuration = 5f;
-    public float strengthAttackCooldown = 0.25f;
+    public float strengthDamageMultiplier = 2f;
     public float doubleJumpDuration = 8f;
     public int healAmount = 25;
 
@@ -64,7 +64,7 @@ public class PotionInventory : MonoBehaviour
     // --------------------
     private float baseMoveSpeed;
     private float baseJumpSpeed;
-    private float baseAttackCooldown;
+    private int baseAttackDamage;
     private bool baseHasDoubleJump;
 
     // --------------------
@@ -448,9 +448,10 @@ public class PotionInventory : MonoBehaviour
             yield break;
         }
 
-        combatScript.attackCooldown = strengthAttackCooldown;
+        int boostedDamage = Mathf.RoundToInt(baseAttackDamage * strengthDamageMultiplier);
+        combatScript.attackDamage = Mathf.Max(baseAttackDamage, boostedDamage);
         yield return new WaitForSeconds(strengthPotionDuration);
-        combatScript.attackCooldown = baseAttackCooldown;
+        combatScript.attackDamage = baseAttackDamage;
         strengthCoroutine = null;
     }
 
@@ -597,7 +598,7 @@ public class PotionInventory : MonoBehaviour
 
         if (combatScript != null)
         {
-            baseAttackCooldown = combatScript.attackCooldown;
+            baseAttackDamage = combatScript.attackDamage;
         }
     }
 

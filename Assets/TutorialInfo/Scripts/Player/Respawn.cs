@@ -5,10 +5,12 @@ public class Respawn : MonoBehaviour
     // --------------------
     // Nastaveni respawnu
     // --------------------
-    public Transform respawnPoint;
     public float fallLimitY = -20f;
 
     private CharacterController cc;
+    private Transform checkpointRespawnPoint;
+    private Vector3 startRespawnPosition;
+    private Quaternion startRespawnRotation;
 
     // --------------------
     // Unity zivotni cyklus
@@ -16,6 +18,8 @@ public class Respawn : MonoBehaviour
     void Awake()
     {
         cc = GetComponent<CharacterController>();
+        startRespawnPosition = transform.position;
+        startRespawnRotation = transform.rotation;
     }
 
     void Update()
@@ -31,21 +35,23 @@ public class Respawn : MonoBehaviour
     // --------------------
     public void SetRespawnPoint(Transform newRespawnPoint)
     {
-        respawnPoint = newRespawnPoint;
+        checkpointRespawnPoint = newRespawnPoint;
     }
 
     public void PlayerRespawn()
     {
-        if (respawnPoint == null)
-        {
-            Debug.LogWarning("Respawn point neni nastaveny.");
-            return;
-        }
-
         SetCharacterControllerEnabled(false);
 
-        transform.position = respawnPoint.position;
-        transform.rotation = respawnPoint.rotation;
+        if (checkpointRespawnPoint != null)
+        {
+            transform.position = checkpointRespawnPoint.position;
+            transform.rotation = checkpointRespawnPoint.rotation;
+        }
+        else
+        {
+            transform.position = startRespawnPosition;
+            transform.rotation = startRespawnRotation;
+        }
 
         SetCharacterControllerEnabled(true);
     }

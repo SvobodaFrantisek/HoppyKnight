@@ -14,7 +14,6 @@ public class AnimalMovement : MonoBehaviour
     // Patrolovani
     // --------------------
     [Header("Patrol")]
-    public Transform[] patrolPoints;
     public float patrolPointReachDistance = 0.5f;
     public float waitAtPatrolPoint = 1f;
     public float randomPatrolRadius = 8f;
@@ -43,7 +42,6 @@ public class AnimalMovement : MonoBehaviour
     // Stav behem hry
     // --------------------
     private NavMeshAgent agent;
-    private int currentPatrolIndex;
     private float waitTimer;
     private bool fleeing;
     private Vector3 randomPatrolCenter;
@@ -65,7 +63,7 @@ public class AnimalMovement : MonoBehaviour
     {
         FindPlayerIfNeeded();
         randomPatrolCenter = transform.position;
-        GoToCurrentPatrolPoint();
+        GoToRandomPatrolPoint();
     }
 
     void Update()
@@ -106,7 +104,7 @@ public class AnimalMovement : MonoBehaviour
         if (fleeing && distanceToPlayer >= safeRange)
         {
             fleeing = false;
-            GoToCurrentPatrolPoint();
+            GoToRandomPatrolPoint();
         }
     }
 
@@ -114,30 +112,6 @@ public class AnimalMovement : MonoBehaviour
     // Patrolovani
     // --------------------
     void HandlePatrol()
-    {
-        if (!HasPatrolPoints())
-        {
-            HandleRandomPatrol();
-            return;
-        }
-
-        if (waitTimer > 0f)
-        {
-            waitTimer -= Time.deltaTime;
-            agent.isStopped = true;
-            return;
-        }
-
-        agent.speed = walkSpeed;
-        agent.isStopped = false;
-
-        if (!agent.pathPending && agent.remainingDistance <= patrolPointReachDistance)
-        {
-            MoveToNextPatrolPoint();
-        }
-    }
-
-    void HandleRandomPatrol()
     {
         if (waitTimer > 0f)
         {
@@ -186,47 +160,6 @@ public class AnimalMovement : MonoBehaviour
         }
     }
 
-    // --------------------
-    // Patrol pointy
-    // --------------------
-    void MoveToNextPatrolPoint()
-    {
-        if (!HasPatrolPoints())
-        {
-            waitTimer = waitAtPatrolPoint;
-            GoToRandomPatrolPoint();
-            return;
-        }
-
-        currentPatrolIndex++;
-
-        if (currentPatrolIndex >= patrolPoints.Length)
-        {
-            currentPatrolIndex = 0;
-        }
-
-        waitTimer = waitAtPatrolPoint;
-        GoToCurrentPatrolPoint();
-    }
-
-    void GoToCurrentPatrolPoint()
-    {
-        if (!HasPatrolPoints())
-        {
-            GoToRandomPatrolPoint();
-            return;
-        }
-
-        Transform patrolPoint = patrolPoints[currentPatrolIndex];
-
-        if (patrolPoint == null)
-        {
-            return;
-        }
-
-        agent.SetDestination(patrolPoint.position);
-    }
-
     void GoToRandomPatrolPoint()
     {
         int attempt = 0;
@@ -248,11 +181,6 @@ public class AnimalMovement : MonoBehaviour
         }
 
         agent.isStopped = true;
-    }
-
-    bool HasPatrolPoints()
-    {
-        return patrolPoints != null && patrolPoints.Length > 0;
     }
 
     // --------------------

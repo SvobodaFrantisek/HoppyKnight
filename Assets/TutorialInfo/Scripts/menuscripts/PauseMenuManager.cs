@@ -3,7 +3,9 @@ using TMPro;
 using UnityEditor;
 #endif
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Events;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -46,9 +48,6 @@ public class PauseMenuManager : MonoBehaviour
 
     private bool isPaused = false;
 
-    private const string VolumeKey = "MainMenu_Volume";
-    private const string FullscreenKey = "MainMenu_Fullscreen";
-
     // --------------------
     // Unity zivotni cyklus
     // --------------------
@@ -57,6 +56,7 @@ public class PauseMenuManager : MonoBehaviour
         Time.timeScale = 1f;
 
         LoadSavedSettings();
+        EnsureUiCanReceiveClicks();
         SetupButtons();
         HidePauseMenu();
     }
@@ -66,6 +66,11 @@ public class PauseMenuManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             TogglePause();
+        }
+
+        if (isPaused)
+        {
+            UnlockCursor();
         }
     }
 
@@ -91,7 +96,10 @@ public class PauseMenuManager : MonoBehaviour
         AudioListener.pause = true;
 
         ShowPausePanel();
+        EnsureUiCanReceiveClicks();
+        SetupButtons();
         UnlockCursor();
+        SelectButton(resumeButton);
     }
 
     public void ResumeGame()
@@ -102,18 +110,23 @@ public class PauseMenuManager : MonoBehaviour
 
         HidePauseMenu();
         LockCursor();
+        ClearSelectedButton();
     }
 
     public void OpenSettings()
     {
         SetPanelActive(pausePanel, false);
         SetPanelActive(settingsPanel, true);
+        EnsureUiCanReceiveClicks();
         RefreshSettingsTexts();
+        SelectButton(volumeButton);
     }
 
     public void BackToPauseMenu()
     {
         ShowPausePanel();
+        EnsureUiCanReceiveClicks();
+        SelectButton(resumeButton);
     }
 
     public void LoadMainMenu()
@@ -161,24 +174,7 @@ public class PauseMenuManager : MonoBehaviour
 
     public void ToggleFullscreen()
     {
-        if (Screen.fullScreen)
-        {
-            Screen.fullScreen = false;
-        }
-        else
-        {
-            Screen.fullScreen = true;
-        }
-
-        int fullscreenValue = 0;
-
-        if (Screen.fullScreen)
-        {
-            fullscreenValue = 1;
-        }
-
-        PlayerPrefs.SetInt(FullscreenKey, fullscreenValue);
-        PlayerPrefs.Save();
+        GameSettings.ToggleFullscreen();
         RefreshSettingsTexts();
     }
 
@@ -227,6 +223,81 @@ public class PauseMenuManager : MonoBehaviour
         }
     }
 
+    private void EnsureUiCanReceiveClicks()
+    {
+        EnsureEventSystem();
+        EnsurePanelCanvasCanReceiveClicks(pausePanel);
+        EnsurePanelCanvasCanReceiveClicks(settingsPanel);
+    }
+
+    private void EnsureEventSystem()
+    {
+        EventSystem eventSystem = EventSystem.current;
+
+        if (eventSystem == null)
+        {
+            eventSystem = FindAnyObjectByType<EventSystem>();
+        }
+
+        if (eventSystem == null)
+        {
+            GameObject eventSystemObject = new GameObject("EventSystem");
+            eventSystem = eventSystemObject.AddComponent<EventSystem>();
+        }
+
+        EventSystem.current = eventSystem;
+        eventSystem.enabled = true;
+
+        InputSystemUIInputModule inputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
+
+        if (inputModule == null)
+        {
+            inputModule = eventSystem.gameObject.AddComponent<InputSystemUIInputModule>();
+        }
+
+        inputModule.enabled = true;
+        inputModule.AssignDefaultActions();
+    }
+
+    private void EnsurePanelCanvasCanReceiveClicks(GameObject panel)
+    {
+        if (panel == null)
+        {
+            return;
+        }
+
+        Canvas canvas = panel.GetComponentInParent<Canvas>(true);
+
+        if (canvas == null)
+        {
+            return;
+        }
+
+        if (canvas.GetComponent<GraphicRaycaster>() == null)
+        {
+            canvas.gameObject.AddComponent<GraphicRaycaster>();
+        }
+    }
+
+    private void SelectButton(Button button)
+    {
+        if (EventSystem.current == null || button == null)
+        {
+            return;
+        }
+
+        EventSystem.current.SetSelectedGameObject(null);
+        EventSystem.current.SetSelectedGameObject(button.gameObject);
+    }
+
+    private void ClearSelectedButton()
+    {
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+    }
+
     private void RefreshSettingsTexts()
     {
         TMP_Text currentVolumeText = volumeText;
@@ -264,45 +335,13 @@ public class PauseMenuManager : MonoBehaviour
 
     private void SetVolume(float newVolume)
     {
-        AudioListener.volume = Mathf.Clamp01(newVolume);
-        PlayerPrefs.SetFloat(VolumeKey, AudioListener.volume);
-        PlayerPrefs.Save();
+        GameSettings.SetVolume(newVolume);
     }
 
     private void LoadSavedSettings()
     {
-        LoadVolume();
-        LoadFullscreen();
+        GameSettings.ApplySavedSettings();
         RefreshSettingsTexts();
-    }
-
-    private void LoadVolume()
-    {
-        if (!PlayerPrefs.HasKey(VolumeKey))
-        {
-            return;
-        }
-
-        AudioListener.volume = PlayerPrefs.GetFloat(VolumeKey);
-    }
-
-    private void LoadFullscreen()
-    {
-        if (!PlayerPrefs.HasKey(FullscreenKey))
-        {
-            return;
-        }
-
-        int fullscreenValue = PlayerPrefs.GetInt(FullscreenKey);
-
-        if (fullscreenValue == 1)
-        {
-            Screen.fullScreen = true;
-        }
-        else
-        {
-            Screen.fullScreen = false;
-        }
     }
 
     private void UnlockCursor()

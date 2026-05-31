@@ -14,7 +14,6 @@ public class EnemyThrowerMovement : MonoBehaviour
     // Patrolovani
     // --------------------
     [Header("Patrol")]
-    public Transform[] patrolPoints;
     public float patrolPointReachDistance = 0.5f;
     public float waitAtPatrolPoint = 1f;
     public float randomPatrolRadius = 8f;
@@ -47,7 +46,6 @@ public class EnemyThrowerMovement : MonoBehaviour
     // Stav behem hry
     // --------------------
     private NavMeshAgent agent;
-    private int currentPatrolIndex;
     private float waitTimer;
     private bool fightingPlayer;
     private bool walkingForward;
@@ -79,7 +77,7 @@ public class EnemyThrowerMovement : MonoBehaviour
             return;
         }
 
-        GoToCurrentPatrolPoint();
+        GoToRandomPatrolPoint();
     }
 
     void Update()
@@ -128,7 +126,7 @@ public class EnemyThrowerMovement : MonoBehaviour
         {
             fightingPlayer = false;
             agent.stoppingDistance = 0f;
-            GoToCurrentPatrolPoint();
+            GoToRandomPatrolPoint();
         }
     }
 
@@ -136,33 +134,6 @@ public class EnemyThrowerMovement : MonoBehaviour
     // Patrolovani
     // --------------------
     void HandlePatrol()
-    {
-        if (!HasPatrolPoints())
-        {
-            HandleRandomPatrol();
-            return;
-        }
-
-        agent.stoppingDistance = 0f;
-
-        if (waitTimer > 0f)
-        {
-            waitTimer -= Time.deltaTime;
-            agent.isStopped = true;
-            SetMovementAnimation(false, false);
-            return;
-        }
-
-        agent.isStopped = false;
-        SetMovementAnimation(true, false);
-
-        if (!agent.pathPending && agent.remainingDistance <= patrolPointReachDistance)
-        {
-            MoveToNextPatrolPoint();
-        }
-    }
-
-    void HandleRandomPatrol()
     {
         agent.stoppingDistance = 0f;
 
@@ -251,47 +222,6 @@ public class EnemyThrowerMovement : MonoBehaviour
         SetMovementAnimation(false, false);
     }
 
-    // --------------------
-    // Patrol pointy
-    // --------------------
-    void MoveToNextPatrolPoint()
-    {
-        if (!HasPatrolPoints())
-        {
-            waitTimer = waitAtPatrolPoint;
-            GoToRandomPatrolPoint();
-            return;
-        }
-
-        currentPatrolIndex++;
-
-        if (currentPatrolIndex >= patrolPoints.Length)
-        {
-            currentPatrolIndex = 0;
-        }
-
-        waitTimer = waitAtPatrolPoint;
-        GoToCurrentPatrolPoint();
-    }
-
-    void GoToCurrentPatrolPoint()
-    {
-        if (!HasPatrolPoints())
-        {
-            GoToRandomPatrolPoint();
-            return;
-        }
-
-        Transform patrolPoint = patrolPoints[currentPatrolIndex];
-
-        if (patrolPoint == null)
-        {
-            return;
-        }
-
-        agent.SetDestination(patrolPoint.position);
-    }
-
     void GoToRandomPatrolPoint()
     {
         int attempt = 0;
@@ -314,24 +244,6 @@ public class EnemyThrowerMovement : MonoBehaviour
 
         agent.isStopped = true;
         SetMovementAnimation(false, false);
-    }
-
-    bool HasPatrolPoints()
-    {
-        if (patrolPoints == null)
-        {
-            return false;
-        }
-
-        foreach (Transform patrolPoint in patrolPoints)
-        {
-            if (patrolPoint != null)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     bool EnsureAgentIsOnNavMesh()

@@ -90,32 +90,6 @@ public class GameManager : MonoBehaviour
     }
 
     // --------------------
-    // Stare napojeni z UI / sceny
-    // --------------------
-    // Legacy wrapper ponechany kvuli stavajicim referencim.
-    public void addGem(int amount)
-    {
-        AddGem(amount);
-    }
-
-    // Legacy wrapper ponechany kvuli stavajicim referencim.
-    public void buyItem(int cost)
-    {
-        TrySpendCoins(cost);
-    }
-
-    // Legacy wrapper ponechany kvuli stavajicim referencim.
-    public int getCoins()
-    {
-        return GetCoins();
-    }
-
-    public int GetCoins()
-    {
-        return coins;
-    }
-
-    // --------------------
     // HUD helper metody
     // --------------------
     void CacheHudManager()

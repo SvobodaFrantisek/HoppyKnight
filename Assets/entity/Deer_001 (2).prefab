@@ -644,7 +644,6 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::AnimalMovement
   player: {fileID: 0}
-  patrolPoints: []
   patrolPointReachDistance: 0.5
   waitAtPatrolPoint: 1
   randomPatrolRadius: 8

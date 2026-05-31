@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 public class ShopkeeperScript : MonoBehaviour
@@ -26,6 +27,7 @@ public class ShopkeeperScript : MonoBehaviour
 
         if (shopUI != null)
         {
+            RefreshShopPriceTexts();
             SetShopVisible(false);
         }
         else
@@ -192,6 +194,11 @@ public class ShopkeeperScript : MonoBehaviour
             return;
         }
 
+        if (visibleState)
+        {
+            RefreshShopPriceTexts();
+        }
+
         shopUI.SetActive(visibleState);
 
         if (visibleState)
@@ -203,5 +210,115 @@ public class ShopkeeperScript : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    void RefreshShopPriceTexts()
+    {
+        if (shopUI == null)
+        {
+            return;
+        }
+
+        TMP_Text[] shopTexts = shopUI.GetComponentsInChildren<TMP_Text>(true);
+
+        for (int i = 0; i < shopTexts.Length; i++)
+        {
+            RefreshPotionPriceText(shopTexts[i]);
+        }
+    }
+
+    void RefreshPotionPriceText(TMP_Text shopText)
+    {
+        if (shopText == null)
+        {
+            return;
+        }
+
+        string potionLabel = GetPotionLabel(shopText.text);
+
+        if (string.IsNullOrEmpty(potionLabel))
+        {
+            return;
+        }
+
+        int cost = GetPotionCost(potionLabel);
+        shopText.text = potionLabel + "\n" + GetCoinPriceText(cost);
+    }
+
+    string GetPotionLabel(string currentText)
+    {
+        if (string.IsNullOrEmpty(currentText))
+        {
+            return "";
+        }
+
+        string normalizedText = currentText.Trim().ToUpperInvariant();
+
+        if (normalizedText.StartsWith("DOUBLE JUMP"))
+        {
+            return "DOUBLE JUMP";
+        }
+
+        if (normalizedText.StartsWith("JUMP BOOST"))
+        {
+            return "JUMP BOOST";
+        }
+
+        if (normalizedText.StartsWith("STRENGTH"))
+        {
+            return "STRENGTH";
+        }
+
+        if (normalizedText.StartsWith("SPEED"))
+        {
+            return "SPEED";
+        }
+
+        if (normalizedText.StartsWith("HEAL"))
+        {
+            return "HEAL";
+        }
+
+        return "";
+    }
+
+    int GetPotionCost(string potionLabel)
+    {
+        if (potionLabel == "HEAL")
+        {
+            return healthCost;
+        }
+
+        if (potionLabel == "SPEED")
+        {
+            return speedCost;
+        }
+
+        if (potionLabel == "JUMP BOOST")
+        {
+            return jumpBoostCost;
+        }
+
+        if (potionLabel == "DOUBLE JUMP")
+        {
+            return doubleJumpCost;
+        }
+
+        if (potionLabel == "STRENGTH")
+        {
+            return strengthCost;
+        }
+
+        return 0;
+    }
+
+    string GetCoinPriceText(int cost)
+    {
+        if (cost == 1)
+        {
+            return "1 COIN";
+        }
+
+        return cost + " COINS";
     }
 }

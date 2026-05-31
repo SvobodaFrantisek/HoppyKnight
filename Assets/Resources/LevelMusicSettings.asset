@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e499e28494c542d59fb9b8d29403e727, type: 3}
+  m_Name: LevelMusicSettings
+  m_EditorClassIdentifier: 
+  tracks:
+  - {fileID: 8300000, guid: 2bb656aef9d7d714bb8a59f986e626a3, type: 3}
+  - {fileID: 8300000, guid: b864bb8dd1e8e434e91082ed6f83820a, type: 3}
+  - {fileID: 8300000, guid: 4446260b52d256342956d349c889aee0, type: 3}
+  - {fileID: 8300000, guid: b3ce320fcc605864c8e0aea48e403af0, type: 3}
+  - {fileID: 8300000, guid: 272ccde9888cd114a9915ba653790821, type: 3}
+  - {fileID: 8300000, guid: 05d9ef6e51db1764b89a299d95ff0b9c, type: 3}
+  - {fileID: 8300000, guid: 34cb998828eedac4cbbe0762ebccbf2c, type: 3}
+  volume: 0.4
+  levelSceneNames:
+  - Level_01
+  - Level_02
+  - Level_03

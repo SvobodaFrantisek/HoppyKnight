@@ -3179,7 +3179,7 @@ MonoBehaviour:
   jumpBoostDuration: 5
   jumpBoostValue: 4
   strengthPotionDuration: 5
-  strengthAttackCooldown: 0.25
+  strengthDamageMultiplier: 2
   doubleJumpDuration: 8
   healAmount: 25
 --- !u!1 &9175695864644563948
