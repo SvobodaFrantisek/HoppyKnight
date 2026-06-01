@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -9,6 +10,10 @@ public class ShopkeeperScript : MonoBehaviour
     public GameObject shopUI;
     public GameManager gameManager;
     public PotionInventory potionInventory;
+    public FPSController playerController;
+
+    [Header("Shop Lock")]
+    public bool lockPlayerAndCameraWhileShopOpen = true;
 
     public int healthCost = 0;
     public int speedCost = 0;
@@ -17,6 +22,12 @@ public class ShopkeeperScript : MonoBehaviour
     public int strengthCost = 0;
 
     public bool playerInRange = false;
+
+    private readonly List<Behaviour> disabledCameraInputBehaviours = new List<Behaviour>();
+    private bool shopLockApplied;
+    private bool hadPlayerControllerState;
+    private bool previousInputLocked;
+    private bool previousMovementLocked;
 
     // --------------------
     // Unity zivotni cyklus
@@ -39,6 +50,11 @@ public class ShopkeeperScript : MonoBehaviour
     void Update()
     {
         TryToggleShopFromInput();
+    }
+
+    void OnDisable()
+    {
+        ReleaseShopLock();
     }
 
     // --------------------
@@ -165,6 +181,11 @@ public class ShopkeeperScript : MonoBehaviour
         {
             potionInventory = FindAnyObjectByType<PotionInventory>();
         }
+
+        if (playerController == null)
+        {
+            playerController = FindAnyObjectByType<FPSController>();
+        }
     }
 
     bool HasRequiredReferences()
@@ -197,6 +218,11 @@ public class ShopkeeperScript : MonoBehaviour
         if (visibleState)
         {
             RefreshShopPriceTexts();
+            ApplyShopLock();
+        }
+        else
+        {
+            ReleaseShopLock();
         }
 
         shopUI.SetActive(visibleState);
@@ -210,6 +236,96 @@ public class ShopkeeperScript : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    void ApplyShopLock()
+    {
+        if (!lockPlayerAndCameraWhileShopOpen || shopLockApplied)
+        {
+            return;
+        }
+
+        CacheReferences();
+
+        if (playerController != null)
+        {
+            hadPlayerControllerState = true;
+            previousInputLocked = playerController.inputLocked;
+            previousMovementLocked = playerController.movementLocked;
+            playerController.SetInputLocked(true);
+            playerController.SetMovementLocked(true);
+        }
+        else
+        {
+            hadPlayerControllerState = false;
+        }
+
+        DisableCameraInputBehaviours();
+        shopLockApplied = true;
+    }
+
+    void ReleaseShopLock()
+    {
+        if (!shopLockApplied)
+        {
+            return;
+        }
+
+        if (playerController != null && hadPlayerControllerState)
+        {
+            playerController.SetInputLocked(previousInputLocked);
+            playerController.SetMovementLocked(previousMovementLocked);
+        }
+
+        RestoreCameraInputBehaviours();
+        shopLockApplied = false;
+    }
+
+    void DisableCameraInputBehaviours()
+    {
+        disabledCameraInputBehaviours.Clear();
+
+        Behaviour[] behaviours = FindObjectsByType<Behaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            Behaviour behaviour = behaviours[i];
+
+            if (behaviour == null || !behaviour.enabled)
+            {
+                continue;
+            }
+
+            if (!IsCinemachineInputBehaviour(behaviour))
+            {
+                continue;
+            }
+
+            disabledCameraInputBehaviours.Add(behaviour);
+            behaviour.enabled = false;
+        }
+    }
+
+    void RestoreCameraInputBehaviours()
+    {
+        for (int i = 0; i < disabledCameraInputBehaviours.Count; i++)
+        {
+            Behaviour behaviour = disabledCameraInputBehaviours[i];
+
+            if (behaviour != null)
+            {
+                behaviour.enabled = true;
+            }
+        }
+
+        disabledCameraInputBehaviours.Clear();
+    }
+
+    bool IsCinemachineInputBehaviour(Behaviour behaviour)
+    {
+        string typeName = behaviour.GetType().Name;
+
+        return typeName.Contains("Cinemachine") && typeName.Contains("Input");
     }
 
     void RefreshShopPriceTexts()

@@ -20,7 +20,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 272ccde9888cd114a9915ba653790821, type: 3}
   - {fileID: 8300000, guid: 05d9ef6e51db1764b89a299d95ff0b9c, type: 3}
   - {fileID: 8300000, guid: 34cb998828eedac4cbbe0762ebccbf2c, type: 3}
-  volume: 0.4
+  volume: 0.02
   levelSceneNames:
   - Level_01
   - Level_02

@@ -24,6 +24,7 @@ public class MainMenuManager : MonoBehaviour
     public Button tutorialButton;
     public Button settingsButton;
     public Button exitButton;
+    public Button loreButton;
 
     // --------------------
     // Tutorial panel ve scene
@@ -32,6 +33,13 @@ public class MainMenuManager : MonoBehaviour
     public GameObject tutorialPanel;
     public Button tutorialBackButton;
     public GameObject[] mainMenuObjects;
+
+    // --------------------
+    // Lore panel ve scene
+    // --------------------
+    [Header("Lore")]
+    public GameObject lorePanel;
+    public Button loreBackButton;
 
     // --------------------
     // Settings hodnoty
@@ -58,15 +66,19 @@ public class MainMenuManager : MonoBehaviour
     public void ShowMainMenu()
     {
         SetTutorialPanelActive(false);
+        SetLorePanelActive(false);
         SetMainMenuObjectsActive(true);
         SetButtonActive(exitButton, true);
+        SetButtonActive(loreButton, true);
 
         SetupButton(playButton, "PLAY", PlayGame);
         SetupButton(tutorialButton, "TUTORIAL", OpenTutorial);
         SetupButton(settingsButton, "SETTINGS", OpenSettings);
         SetupButton(exitButton, "EXIT", ExitGame);
+        SetupButton(loreButton, "LORE (RECOMMENDED)", OpenLore);
 
         SetupButton(tutorialBackButton, "BACK", ShowMainMenu);
+        SetupButton(loreBackButton, "BACK", ShowMainMenu);
     }
 
     public void PlayGame()
@@ -78,7 +90,16 @@ public class MainMenuManager : MonoBehaviour
     {
         SetMainMenuObjectsActive(false);
         SetTutorialPanelActive(true);
+        SetLorePanelActive(false);
         SetupButton(tutorialBackButton, "BACK", ShowMainMenu);
+    }
+
+    public void OpenLore()
+    {
+        SetMainMenuObjectsActive(false);
+        SetTutorialPanelActive(false);
+        SetLorePanelActive(true);
+        SetupButton(loreBackButton, "BACK", ShowMainMenu);
     }
 
     public void OpenSettings()
@@ -125,12 +146,14 @@ public class MainMenuManager : MonoBehaviour
     private void RefreshSettingsMenu()
     {
         SetTutorialPanelActive(false);
+        SetLorePanelActive(false);
         SetMainMenuObjectsActive(true);
 
         SetupButton(playButton, GetVolumeText(), ChangeVolume);
         SetupButton(tutorialButton, GetFullscreenText(), ToggleFullscreen);
         SetupButton(settingsButton, "BACK", ShowMainMenu);
         SetButtonActive(exitButton, false);
+        SetButtonActive(loreButton, false);
     }
 
     private void SetupButton(Button button, string labelText, UnityAction action)
@@ -167,6 +190,14 @@ public class MainMenuManager : MonoBehaviour
         if (tutorialPanel != null)
         {
             tutorialPanel.SetActive(activeState);
+        }
+    }
+
+    private void SetLorePanelActive(bool activeState)
+    {
+        if (lorePanel != null)
+        {
+            lorePanel.SetActive(activeState);
         }
     }
 
